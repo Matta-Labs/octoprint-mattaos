@@ -33,7 +33,12 @@ plugin_url = "https://github.com/Matta-Labs/octoprint-mattaconnect"
 plugin_license = "AGPLv3"
 
 # Any additional requirements besides OctoPrint should be listed here
-plugin_requires = []
+plugin_requires = [
+    "sentry-sdk",
+    "backoff",
+    "numpy",
+    "Pillow",
+]
 
 ### --------------------------------------------------------------------------------------------------------------------
 ### More advanced options that you usually shouldn't have to touch follow after this point
