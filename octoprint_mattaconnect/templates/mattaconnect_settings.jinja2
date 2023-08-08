@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<div id="mattaconnect" class="row-fluid mattaconnect-container">
+    <div>
+        <h3 class="mattaconnect-title">MattaConnect Plugin - v0.1.0alpha</h3>
+        <form>
+            <div class="control-group">
+                <label class="control-label">{{ _('Authorisation token') }}</label>
+                <div class="controls">
+                    <input id="settings_token_input" type="text" class="matta-input-box d-inline-block" data-bind="value: auth_token" placeholder="Paste your token here">
+                    <button id="settings_test_btn" class="btn btn-primary test-btn test-auth-token d-inline-block" type="button"><i id="settings_test_btn_spin" class="fa fa-spinner fa-spin" style="display: none; padding-right: 4px;"></i>Activate</button>
+                    <div class="small-text-div"><small>Paste your copied <a href="https://os.matta.ai">Matta OS</a> authorisation token in here and click "Activate".</small></div>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label">{{ _('WebRTC stream URL') }}</label>
+                <div class="controls">
+                    <input type="text" class="matta-input-box" id="webrtc-url" data-bind="value: webrtc_url">
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label">{{ _('Camera snapshot URL') }}</label>
+                <div class="controls">
+                    <input id="settings_snap_input" type="text" class="matta-input-box d-inline-block" data-bind="value: snapshot_url" placeholder="Paste snap URL here">
+                    <button id="settings_snap_btn" class="btn btn-primary test-btn d-inline-block" type="button">Snap</button>
+                    <div class="small-text-div"><small>Click on the tip of your 3D printer nozzle so <a href="https://www.matta.ai/greymatta">Grey</a> knows where to look.</small></div>
+                    <div class="camPreviewContainerWrapper" id="camPreviewContainerWrapper">
+                        <div class="camPreviewContainerNoRotate" id="camPreviewContainer">
+                            <img class="imgNoRotate" id="camPreview" src="https://matta-os.fra1.cdn.digitaloceanspaces.com/site-assets/placeholder.png" alt="Camera Preview">
+                            <div id="crosshair" class="crosshair"></div>
+                        </div>
+                    </div>
+                    <div class = "coordinates-box">
+                    <p>Coordinates:
+                    <span id="nozzle_tip_coords_x" value="nozzle_tip_coords_x" data-bind="nozzle_tip_coords_x">X Coordinates</span>,
+                    <span id="nozzle_tip_coords_y" value="nozzle_tip_coords_y" data-bind="nozzle_tip_coords_y">Y Coordinates</span>
+                    </p>
+                    </div>    
+                    <label class="checkbox">
+                        <input type="checkbox" id="flip_h" name="flip_h" data-bind="checked: flip_h">
+                    Flip the camera horizontally
+                    </label>
+                    <label class="checkbox">
+                        <input type="checkbox" id="flip_v" name="flip_v" data-bind="checked: flip_v">
+                    Flip the camera vertically
+                    </label>
+
+                    <label class="checkbox">
+                        <input type="checkbox" id="rotate" name="rotate" data-bind="checked: rotate">
+                    Rotate the camera view by 90 degrees anticlockwise
+                    </label>
+                </div>
+            </div>     
+            <div class="control-group">
+                <label class="control-label">{{ _('Default Z Offset') }}</label>
+                <div class="controls input-append">
+                    <input type="text" class="input-mini" id="default_z_offset_input" data-bind="value: default_z_offset">
+                    <span class="add-on">mm</span>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+</html>
