@@ -28,7 +28,7 @@ $(function() {
         };
         $.ajax({
             // url for /api/plugin/matta_os getting base and port from window.location
-            url: window.location.origin + "/api/plugin/matta_os",
+            url: window.location.origin + "/api/plugin/mattaconnect",
             type: "POST",
             data: JSON.stringify(data),
             contentType: "application/json",

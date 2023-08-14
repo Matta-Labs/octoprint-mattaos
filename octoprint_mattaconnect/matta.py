@@ -74,7 +74,6 @@ class MattaCore:
                 return True
         return False
 
-    @backoff.on_exception(backoff.expo, Exception)
     def ws_connect(self, wait=True):
         """
         Connects to the WebSocket server.
@@ -99,7 +98,7 @@ class MattaCore:
             ws_thread.daemon = True
             ws_thread.start()
             if wait:
-                time.sleep(1.5) # wait for 1.5 seconds
+                time.sleep(2) # wait for 2 seconds
         except Exception as e:
             self._logger.error("ws_on_close: %s", e)
             pass
@@ -155,7 +154,7 @@ class MattaCore:
 
         """
         json_msg = json.loads(msg)
-        self._logger.debug("ws_on_message: %s", json_msg)
+        self._logger.info("ws_on_message: %s", json_msg)
         if (
             json_msg["token"] == self._settings.get(["auth_token"])
             and json_msg["interface"] == "client"
@@ -178,8 +177,28 @@ class MattaCore:
             else:
                 self._printer.handle_cmds(json_msg)
                 msg = self.ws_data()
-        self.ws.send_msg(msg)
+        self.ws_send(msg)
         self.update_ws_send_interval()
+    
+    def ws_send(self, msg):
+        """
+        Sends a message over the WebSocket connection.
+
+        Args:
+            msg (str): The message to send.
+
+        """
+        try:
+            if self.ws_connected():
+                self._logger.info("Sending...")
+                self.ws.send_msg(msg)
+                self._logger.info("Sent")
+            else:
+                self.ws_connect()
+                self.ws.send_msg(msg)
+        except Exception as e:
+            self._logger.error("ws_send: %s", e)
+        
 
     def ws_data(self, extra_data=None):
         """
@@ -291,7 +310,8 @@ class MattaCore:
                         self.ws.send_msg(msg)
                     time.sleep(0.1)  # slow things down to 100ms
                     self.update_ws_send_interval()
-            except AttributeError:
+            except Exception as e:
+                self._logger.error("websocket_thread_loop: %s", e)
                 if self.ws_connected():
                     self.ws.disconnect()
                     self.ws = None
@@ -303,7 +323,6 @@ class MattaCore:
                 except Exception as e:
                     self._logger.error("ws_send_data: %s", e)
 
-    @backoff.on_exception(backoff.expo, requests.exceptions.RequestException)
     def request_webrtc_stream(self):
         """
         Initiates a WebRTC stream by sending a request to the /webcam/webrtc endpoint.
@@ -313,6 +332,7 @@ class MattaCore:
         Returns:
             dict: A dictionary containing WebRTC data if the request is successful, None otherwise.
         """
+        self._logger.info("Requesting WebRTC stream")
         ice_servers = [{"urls": ["stun:stun.l.google.com:19302"]}]
         params = {
             "type": "request",
@@ -324,7 +344,6 @@ class MattaCore:
             resp = requests.post(
                 self._settings.get(["webrtc_url"]), json=params, headers=headers
             )
-            resp.raise_for_status()
             if resp.status_code == 200:
                 return {"webrtc_data": resp.json()}
         except requests.exceptions.RequestException as e:
@@ -333,7 +352,6 @@ class MattaCore:
             self._logger.error(e)
         return None
 
-    @backoff.on_exception(backoff.expo, requests.exceptions.RequestException)
     def remote_webrtc_stream(self, candidate):
         """
         Sends WebRTC candidate data to the /webcam/webrtc endpoint to establish a remote stream.
@@ -356,7 +374,6 @@ class MattaCore:
             resp = requests.post(
                 self._settings.get(["webrtc_url"]), json=params, headers=headers
             )
-            resp.raise_for_status()
             if resp.status_code == 200:
                 return {"webrtc_data": resp.json()}
         except requests.exceptions.RequestException as e:
@@ -365,7 +382,6 @@ class MattaCore:
             self._logger.error(e)
         return None
 
-    @backoff.on_exception(backoff.expo, requests.exceptions.RequestException)
     def connect_webrtc_stream(self, offer):
         """
         Sends WebRTC offer data to the /webcam/webrtc endpoint to establish a WebRTC stream.
@@ -388,7 +404,6 @@ class MattaCore:
             resp = requests.post(
                 self._settings.get(["webrtc_url"]), json=params, headers=headers
             )
-            resp.raise_for_status()
             if resp.status_code == 200:
                 return {"webrtc_data": resp.json()}
         except requests.exceptions.RequestException as e:
