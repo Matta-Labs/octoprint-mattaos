@@ -1,5 +1,6 @@
 import re
 import os
+import base64
 from .utils import make_timestamp
 from octoprint.filemanager import FileDestinations
 from octoprint.filemanager.util import StreamWrapper, DiskFileWrapper
@@ -205,6 +206,22 @@ class MattaPrinter:
                 on_sd = True if json_msg["files"]["loc"] == "sd" else False
                 self._printer.select_file(
                     json_msg["files"]["file"], sd=on_sd, printAfterSelect=False
+                )
+            elif json_msg["files"]["cmd"] == "upload":
+                destination = FileDestinations.SDCARD if json_msg["files"]["loc"] == "sd" else FileDestinations.LOCAL
+                file_content = base64.b64decode(json_msg["files"]["content"])
+                content_string = file_content.decode("utf-8")
+
+                class FileObjectWithSaveMethod:
+                    def save(self, destination_path):
+                        with open(destination_path, 'w') as file:
+                            file.write(str(content_string))
+
+                self._file_manager.add_file(
+                    path=json_msg["files"]["file"],
+                    file_object=FileObjectWithSaveMethod(),
+                    destination=destination,
+                    allow_overwrite=True,
                 )
             elif json_msg["files"]["cmd"] == "delete":
                 destination = FileDestinations.SDCARD if json_msg["files"]["loc"] == "sd" else FileDestinations.LOCAL
