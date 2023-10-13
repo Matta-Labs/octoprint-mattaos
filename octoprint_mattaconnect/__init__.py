@@ -24,6 +24,7 @@ class MattaconnectPlugin(
             "default_z_offset": "0.0",
             "nozzle_tip_coords_x": "10",
             "nozzle_tip_coords_y": "10",
+            "snapshot_url": "http://localhost/webcam/?action=snapshot",
             "webrtc_url": "http://localhost/webcam/webrtc",
             "live_upload": False,
             "flip_h": False,
