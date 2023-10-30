@@ -3,7 +3,6 @@ import threading
 import requests
 import csv
 import json
-from PIL import Image
 from .utils import (
     get_api_url,
     get_gcode_upload_dir,
