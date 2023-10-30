@@ -36,7 +36,7 @@ plugin_license = "AGPLv3"
 plugin_requires = [
     "sentry-sdk",
     "backoff",
-    "numpy",
+    "numpy>=1.26.1",
     "Pillow",
 ]
 
