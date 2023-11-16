@@ -1,17 +1,18 @@
 import re
 import os
 import base64
-from .utils import make_timestamp
+from .utils import get_file_from_backend, make_timestamp
 from octoprint.filemanager import FileDestinations
 from octoprint.filemanager.util import StreamWrapper, DiskFileWrapper
 
 class MattaPrinter:
     """Virtual Printer class for storing current parameters"""
 
-    def __init__(self, printer, logger, file_manager, *args, **kwargs):
+    def __init__(self, printer, logger, file_manager, settings, *args, **kwargs):
         self._printer = printer
         self._logger = logger
         self._file_manager = file_manager
+        self._settings = settings
         self.printing = False  # True when print job is running
         self.finished = True  # True for loop when print job has just finished
 
@@ -216,6 +217,24 @@ class MattaPrinter:
                     def save(self, destination_path):
                         with open(destination_path, 'w') as file:
                             file.write(str(content_string))
+
+                self._file_manager.add_file(
+                    path=json_msg["files"]["file"],
+                    file_object=FileObjectWithSaveMethod(),
+                    destination=destination,
+                    allow_overwrite=True,
+                )
+            elif json_msg["files"]["cmd"] == "upload_big":
+                destination = FileDestinations.SDCARD if json_msg["files"]["loc"] == "sd" else FileDestinations.LOCAL
+                bucket_file = json_msg["files"]["content"]
+                
+                # call backend to get file
+                response = get_file_from_backend(bucket_file, self._settings.get(["auth_token"]))
+
+                class FileObjectWithSaveMethod:
+                    def save(self, destination_path):
+                        with open(destination_path, 'w') as file:
+                            file.write(response)
 
                 self._file_manager.add_file(
                     path=json_msg["files"]["file"],

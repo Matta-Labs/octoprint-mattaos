@@ -20,8 +20,8 @@ import requests
 
 class MattaCore:
     def __init__(self, plugin, csv_capture=True, image_capture=True):
-        self._printer = MattaPrinter(plugin._printer, plugin._logger, plugin._file_manager)
         self._settings = plugin._settings
+        self._printer = MattaPrinter(plugin._printer, plugin._logger, plugin._file_manager, settings=plugin._settings)
         self._logger = plugin._logger
         self._file_manager = plugin._file_manager
         self._logger.debug("Starting MattaConnect Plugin...")
