@@ -1,5 +1,6 @@
 import psutil
 from datetime import datetime
+import requests
 import sentry_sdk
 import os
 from sys import platform
@@ -146,3 +147,18 @@ def init_sentry(version):
         traces_sample_rate=0.01,
         release=f"MattaOSLite@{version}",
     )
+    
+def get_file_from_backend(bucket_file, auth_token):
+    """Gets a file from the backend"""
+    full_url = get_api_url() + "print-jobs/printer/gcode/uploadfile"
+    headers = generate_auth_headers(auth_token)
+    data = {"bucket_file": bucket_file}
+    try:
+        resp = requests.post(
+            url=full_url, data=data, headers=headers
+        )
+        # print data from resp
+        resp.raise_for_status()
+        return resp.text
+    except Exception as e:
+        raise e        # Windows
