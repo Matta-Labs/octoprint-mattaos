@@ -1,3 +1,4 @@
+import base64
 import re
 import os
 import base64

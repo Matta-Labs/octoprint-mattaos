@@ -55,7 +55,7 @@ ssh pi@octopi.local
 
 *Note: the default password for Pi's is `raspberry` it should probably be changed if it is still the password.*
 
-Once on the Pi this git repo can be cloned and subsequently installed. To install the plugin in the correct location, the virtual environment used for OctoPrint must be activated. If you have installed OctoPrint via OctoPi (the Raspbian based SD card image for the Raspberry Pi that already includes OctoPrint plus everything you need to run it) then this is located at `~/oprint/bin/activate`. If you did a custom installed of OctoPrint you probably know where your virtual environment is.
+Once on the Pi this git repo can be cloned and subsequently installed. To install the plugin in the correct location, the virtual environment used for OctoPrint must be activated. If you have installed OctoPrint via OctoPi (the Raspbian based SD card image for the Raspberry Pi that already includes OctoPrint plus everything you need to run it) then this is located at `~/oprint/bin/activate`. If you did a custom install of OctoPrint you probably know where your virtual environment is.
 
 ```shell
 git clone git@github.com:Matta-Labs/octoprint-mattaconnect.git
@@ -71,6 +71,24 @@ sudo reboot
 
 ✨ Thats it! Now the MattaConnect plugin should be installed.
 </details>
+
+<br/>
+
+OctoPrint sets the default image capture format to YUYV, however better streaming results can acheived with MJPEG. This can be changed in the `/boot/usb-default.conf` file as follows:
+<br/>
+
+```shell 
+sudo nano /boot/camera-streamer/usb-default.conf
+```
+
+Set the format to MJPEG:
+
+
+```shell
+# The image format of the camera.
+FORMAT=MJPEG
+```
+
 
 
 ## 🎈 Usage and Configuration
@@ -106,7 +124,7 @@ This is the snapshot URL of your nozzle-cam streamer. The plugin only supports W
 
 1. Paste in the streamer snapshot URL.
 2. Click snap to test the connection.
-3. On the retreved snapshot, click the nozzle tip to show Grey where to look!
+3. On the retreived snapshot, click the nozzle tip to show Grey where to look!
 </details>
 <br/>
 <p>*required for AI-powered error detection</p>

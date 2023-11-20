@@ -13,7 +13,6 @@ from .utils import (
 )
 import os
 import shutil
-import numpy as np
 
 
 class DataEngine:
