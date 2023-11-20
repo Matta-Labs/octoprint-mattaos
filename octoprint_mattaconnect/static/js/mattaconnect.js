@@ -1,61 +1,16 @@
 /*
- * View model for OctoPrint-Octoplug-internal
+ * View model for OctoPrint-MattaConnect
  *
  * Author: Douglas Brion | Matta Labs Ltd
  * License: AGPLv3
  */
 $(function() {
-
-    var settings_test_btn = document.getElementById("settings_test_btn");
-    settings_test_btn.onclick = function() {
-        var settings_test_btn_spin = document.getElementById("settings_test_btn_spin");
-        settings_test_btn_spin.style.display = "inline-block";
-        settings_test_token();
-    };
-
-    var navbar_test_btn = document.getElementById("navbar_test_btn");
-    navbar_test_btn.onclick = function() {
-        var navbar_test_btn_spin = document.getElementById("navbar_test_btn_spin");
-        navbar_test_btn_spin.style.display = "inline-block";
-        settings_test_token();
-    };
-
-    settings_test_token = function() {
-        console.log(document.getElementById("settings_token_input").value);
-        var data = {
-            command: "test_auth_token",
-            auth_token: document.getElementById("settings_token_input").value,
-        };
-        $.ajax({
-            // url for /api/plugin/matta_os getting base and port from window.location
-            url: window.location.origin + "/api/plugin/mattaconnect",
-            type: "POST",
-            data: JSON.stringify(data),
-            contentType: "application/json",
-            dataType: "json",
-            success: function(status) {
-                if (status.success) {
-                new PNotify({
-                    title: gettext("Connection"),
-                    text: gettext(status.text),
-                    type: "success"
-                });
-                } else {
-                new PNotify({
-                    title: gettext("Connection"),
-                    text: gettext(status.text),
-                    type: "error"
-                });
-                }
-                settings_test_btn_spin.style.display = "none";
-                navbar_test_btn_spin.style.display = "none";
-            }
-        });
-    };
-
-
     
     function MattaconnectViewModel(parameters) {
+
+        //---------------------------------------------------
+        // Knockout observables, and page load functions
+        //---------------------------------------------------
 
         var self = this;
 
@@ -112,92 +67,161 @@ $(function() {
             self.rotate(self.settings.settings.plugins.mattaconnect.rotate());
         };
 
+        self.onAfterBinding = function() {
+            self.snap_image();
+            self.updateCrosshairOnLoad();
+            if (self.auth_token()) {
+                self.settings_test_token();
+            }
+        }
+
+        self.updateCrosshairOnLoad = function() {
+            camPreview.onload = function() {
+                let scaleFactor = CAM_PREVIEW_WIDTH / camPreview.naturalWidth;
+                crosshair.style.left = parseInt(self.nozzle_tip_coords_x() * scaleFactor) + "px";
+                crosshair.style.top = parseInt(self.nozzle_tip_coords_y() * scaleFactor) + "px";
+                self.updateImageTransform(); // TODO remove Hacky fix for transform on load bug;
+                                             // TODO it should've done this in snap_image
+            }
+            nozzle_tip_coords_x.textContent = self.nozzle_tip_coords_x();
+            nozzle_tip_coords_y.textContent = self.nozzle_tip_coords_y();
+        }
+        
+
+        //---------------------------------------------------
+        // Constants
+        //---------------------------------------------------
+
+        // TODO: Change the overall process to an easier flow process (so users can just do everything once linearly)
+        // TODO: Help users with the webrtc_url and snapshot_url, by filling ip in it? Find out why 'localhost' is not working? (ip probs ez to get)
+        // * idea: allow os.matta.ai to change nozzle_tip_coords_x, nozzle_tip_coords_y, and flips/rotate. 
+        // * idea: Have nice CSS with matta logo picture on the plugin so it looks nice
+
+        const CAM_PREVIEW_WIDTH = 400;
+        const IMAGE_PLACEHOLDER = "https://matta-os.fra1.cdn.digitaloceanspaces.com/site-assets/placeholder.png"
+
+        const settings_snap_btn = document.getElementById("settings_snap_btn");
+        const camPreviewContainer = document.getElementById("camPreviewContainer");
+        const camPreview = document.getElementById("camPreview");
+        const crosshair = document.getElementById("crosshair");
+        const nozzle_tip_coords_x = document.getElementById("nozzle_tip_coords_x");
+        const nozzle_tip_coords_y = document.getElementById("nozzle_tip_coords_y");
         const flip_h_box = document.getElementById("flip_h");
         const flip_v_box = document.getElementById("flip_v");
         const rotation_box = document.getElementById("rotate");
-        const rotation_container = document.getElementById("camPreviewContainer");
-        const rotation_image = document.getElementById("camPreview");
-        const camPreviewContainer = document.getElementById('camPreviewContainer');
-        const settings_snap_btn = document.getElementById("settings_snap_btn");
-
-        settings_snap_btn.addEventListener('click', function(event){
-            snap_image();
-        });
         
 
-        function snap_image(){
+        //---------------------------------------------------
+        // Snap Image and transform options
+        //---------------------------------------------------
 
-            let camPreview = document.getElementById("camPreview");
+        settings_snap_btn.addEventListener('click', function(event){
+            self.snap_image();
+        });
+        
+        self.snap_image = function() {
             let snapshotUrlInput = document.getElementById("settings_snap_input").value;
-            camPreview.src = snapshotUrlInput + new Date().getTime();
-            camPreview.onload = function(){
-                updateImageTransform();
-            }
-            console.log(camPreview.src);
-            console.log("snap image");
+            camPreview.src = snapshotUrlInput + "?t=" + new Date().getTime();
+            camPreview.onload = function() {
+                if (camPreview.naturalWidth > 0 && camPreview.naturalHeight > 0) {
+                    self.updateImageTransform();
+                } else {
+                    console.log("Snapshot not found.");
+                    camPreview.src = IMAGE_PLACEHOLDER;
+                }
+            };
+            camPreview.onerror = function() {
+                console.log("Error loading snapshot.");
+                camPreview.src = IMAGE_PLACEHOLDER;
+            };
         };
 
-
-        function updateImageDimensions() {
-
-            let naturalWidth = camPreview.naturalWidth;
-            let naturalHeight = camPreview.naturalHeight;
-
-            let aspectRatio = naturalHeight / naturalWidth;
-
-            let width = 400;
+        self.updateImageDimensions = function() {
+            let aspectRatio = camPreview.naturalHeight / camPreview.naturalWidth;
+            let width = CAM_PREVIEW_WIDTH;
             let height = width * aspectRatio;
 
             if (self.rotate()) {
-                rotation_container.style.width = height + "px";
-                rotation_container.style.height = width + "px";
-                rotation_image.style.width = width + "px";
-                rotation_image.style.maxWidth = width + "px";
-                rotation_image.style.height = height + "px";
-                rotation_image.style.maxHeight = height + "px";
-
+                camPreviewContainer.style.width = height + "px";
+                camPreviewContainer.style.height = width + "px";
+                camPreview.style.width = width + "px";
+                camPreview.style.maxWidth = width + "px";
+                camPreview.style.height = height + "px";
+                camPreview.style.maxHeight = height + "px";
             } else {
-                rotation_container.style.width = width + "px";
-                rotation_container.style.height = height + "px";
-                rotation_image.style.width = width + "px";
-                rotation_image.style.maxWidth = width + "px";
-                rotation_image.style.height = height + "px";
-                rotation_image.style.maxHeight = height + "px";
-
+                camPreviewContainer.style.width = width + "px";
+                camPreviewContainer.style.height = height + "px";
+                camPreview.style.width = width + "px";
+                camPreview.style.maxWidth = width + "px";
+                camPreview.style.height = height + "px";
+                camPreview.style.maxHeight = height + "px";
             }
-            console.log("The natural width is "+naturalWidth );
-            console.log("The natural height is "+naturalHeight );
-            console.log("Successfully changed CSS params");
-            console.log("The aspect ratio is "+aspectRatio);
         }
 
+        flip_h_box.addEventListener('change', function (event) {
+            self.updateImageTransform();
+            crosshair.style.display = "none";
+        });
+    
+        flip_v_box.addEventListener('change', function (event) {
+            self.updateImageTransform();
+            crosshair.style.display = "none";
+        });
+    
+        rotation_box.addEventListener('change', function (event) {
+            self.updateImageTransform();
+            crosshair.style.display = "none";
+        });
+
+        self.updateImageTransform = function() {
+            self.updateImageDimensions();
+
+            if (!self.flip_h() && !self.flip_v() && !self.rotate()){
+                camPreview.style.transform = 'none'
+            } else if (self.flip_h() && !self.flip_v() && !self.rotate()){ 
+                camPreview.style.transform = 'scaleX(-1) translate(-100%)';
+            } else if (!self.flip_h() && self.flip_v() && !self.rotate()){
+                camPreview.style.transform = 'scaleY(-1) translateY(-100%)';
+            } else if (self.flip_h() && self.flip_v() && !self.rotate()){ 
+                camPreview.style.transform = 'scale(-1,-1) translate(-100%,-100%)';
+            } else if (!self.flip_h() && !self.flip_v() && self.rotate()){
+                camPreview.style.transform = 'rotate(270deg) translate(-100%)';
+            } else if (self.flip_h() && !self.flip_v() && self.rotate()){
+                camPreview.style.transform = 'scaleX(-1) rotate(90deg)';
+            } else if (!self.flip_h() && self.flip_v() && self.rotate()){
+                camPreview.style.transform = 'scaleY(-1) rotate(90deg) translate(-100%,-100%)';
+            } else if (self.flip_h() && self.flip_v() && self.rotate()){
+                camPreview.style.transform = 'scale(-1,-1) rotate(270deg) translate(0%,-100%)';
+            }
+            console.log("Updated Image Transforms")
+        }
+
+
+        //---------------------------------------------------
+        // Crosshair functions
+        //---------------------------------------------------
 
         camPreviewContainer.addEventListener('click', function (event) {
             let rect = camPreviewContainer.getBoundingClientRect();
             let x = event.clientX - rect.left;
             let y = event.clientY - rect.top;
-            updateCrosshairPosition(x, y);
+            self.updateCrosshairPosition(x, y);
         });
 
-        function updateCrosshairPosition(x, y) {
-            const crosshair = document.querySelector(".crosshair");
+        self.updateCrosshairPosition = (x, y) => {
             crosshair.style.left = x + 'px';
             crosshair.style.top = y + 'px';
-            document.getElementById("crosshair").style.display = "block";
-            calculateAndUpdateNozzleCoords(x, y);
+            crosshair.style.display = "block";
+            self.calculateAndUpdateNozzleCoords(x, y);
         }
     
-        function calculateAndUpdateNozzleCoords(x, y) {
-            let myImage = document.getElementById("camPreview");
+        self.calculateAndUpdateNozzleCoords = (x, y) => {
+            let naturalWidth = camPreview.naturalWidth;
+            let naturalHeight = camPreview.naturalHeight;
     
-            let naturalWidth = myImage.naturalWidth;
-            let naturalHeight = myImage.naturalHeight;
-    
-            let clientWidth = myImage.clientWidth;
-            let clientHeight = myImage.clientHeight;
+            let clientWidth = camPreview.clientWidth;
+            let clientHeight = camPreview.clientHeight;
             
-            const nozzle_tip_coords_x = document.getElementById("nozzle_tip_coords_x");
-            const nozzle_tip_coords_y = document.getElementById("nozzle_tip_coords_y");
             nozzle_tip_coords_x.textContent = parseInt(x / clientWidth * naturalWidth);
             nozzle_tip_coords_y.textContent = parseInt(y / clientHeight * naturalHeight);
 
@@ -205,83 +229,60 @@ $(function() {
             self.nozzle_tip_coords_y(parseInt(y / clientHeight * naturalHeight)); 
         }
 
-        flip_h_box.addEventListener('change', function (event) {
-            updateImageTransform();
-            document.getElementById("crosshair").style.display = "none";
-        });
+        
+        //---------------------------------------------------
+        // Auth token functions
+        //---------------------------------------------------
+
+        const settings_test_btn = document.getElementById("settings_test_btn");
+        const settings_test_btn_spin = document.getElementById("settings_test_btn_spin");
+        const navbar_test_btn = document.getElementById("navbar_test_btn");
+        const navbar_test_btn_spin = document.getElementById("navbar_test_btn_spin");
+        const settings_token_input = document.getElementById("settings_token_input");
+
+        settings_test_btn.onclick = function() {
+            settings_test_btn_spin.style.display = "inline-block";
+            self.settings_test_token();
+        };
     
-        flip_v_box.addEventListener('change', function (event) {
-            updateImageTransform();
-            document.getElementById("crosshair").style.display = "none";
-        });
+        navbar_test_btn.onclick = function() {
+            navbar_test_btn_spin.style.display = "inline-block";
+            self.settings_test_token();
+        };
     
-        rotation_box.addEventListener('change', function (event) {
-            updateImageTransform();
-            document.getElementById("crosshair").style.display = "none";
-        });
-
-        function rotateContainer(){
-            rotation_container.classList.remove("camPreviewContainerNoRotate");
-            rotation_container.classList.add("camPreviewContainerRotate");
-        }
-        function rotateImage(){
-            rotation_image.classList.remove("imgNoRotate");
-            rotation_image.classList.add("imgRotate");
-        }
-        function resetContainer(){
-            rotation_container.classList.remove("camPreviewContainerRotate");
-            rotation_container.classList.add("camPreviewContainerNoRotate");
-        }
-        function resetImage(){
-            rotation_image.classList.remove("imgRotate");
-            rotation_image.classList.add("imgNoRotate");
-        }
-
-        function updateImageTransform() {
-
-            updateImageDimensions();
-            console.log("update image transform")
-
-            if (self.rotate() == false) {
-                resetContainer();
-                resetImage();
-            } else {
-                rotateContainer();
-                rotateImage();
-            }
-
-            if (self.flip_h() == true && self.flip_v() == true && self.rotate() == false){ 
-                rotation_image.style.transformOrigin = '50% 50%';
-                rotation_image.style.transform = 'scale(-1,-1)';
-            }
-            else if (self.flip_h() == true && self.flip_v() == false && self.rotate() == false){ 
-                rotation_image.style.transformOrigin = 'top left';
-                rotation_image.style.transform = 'scaleX(-1) translate(-100%)';
-            }
-            else if (self.flip_h() == false && self.flip_v() == true && self.rotate() == false){
-                rotation_image.style.transformOrigin = '50% 50%';
-                rotation_image.style.transform = 'scaleY(-1)';
-            }
-            else if (self.flip_h() == false && self.flip_v() == false && self.rotate() == false){
-                rotation_image.style.transform = 'rotate(0deg)'
-            }
-            else if (self.flip_h() == false && self.flip_v() == false && self.rotate() == true){
-                rotation_image.style.transformOrigin = 'top left';
-                rotation_image.style.transform = 'rotate(270deg) translate(-100%)';
-            }
-            else if (self.flip_h() == true && self.flip_v() == false && self.rotate() == true){
-                rotation_image.style.transformOrigin = 'top left';
-                rotation_image.style.transform = 'scaleX(-1) rotate(90deg)';
-            }
-            else if (self.flip_h() == false && self.flip_v() == true && self.rotate() == true){
-                rotation_image.style.transformOrigin = 'top left';
-                rotation_image.style.transform = 'scaleY(-1) rotate(90deg) translate(-100%,-100%)';
-            } 
-            else {
-                rotation_image.style.transformOrigin = 'top left';
-                rotation_image.style.transform = 'scale(-1,-1) rotate(270deg) translate(0%,-100%)';
-            }
-        }
+        self.settings_test_token = function() {
+            console.log(`Connecting to Matta OS with token: ${settings_token_input.value}`)
+            let data = {
+                command: "test_auth_token",
+                auth_token: settings_token_input.value,
+            };
+            $.ajax({
+                // url for /api/plugin/matta_os getting base and port from window.location
+                // /api/plugin/matta_os for working in octoplug-internal, /api/plugin/mattaconnect for working in MattaConnect
+                url: window.location.origin + "/api/plugin/mattaconnect",
+                type: "POST",
+                data: JSON.stringify(data),
+                contentType: "application/json",
+                dataType: "json",
+                success: function(status) {
+                    if (status.success) {
+                    new PNotify({
+                        title: gettext("Connection"),
+                        text: gettext(status.text),
+                        type: "success"
+                    });
+                    } else {
+                    new PNotify({
+                        title: gettext("Connection"),
+                        text: gettext(status.text),
+                        type: "error"
+                    });
+                    }
+                    settings_test_btn_spin.style.display = "none";
+                    navbar_test_btn_spin.style.display = "none";
+                }
+            });
+        };
     }
     
 

@@ -6,7 +6,7 @@
     margin-bottom: 12px;
 }
 
-.mattaconnect-logo-container .matta_os-logo {
+.mattaconnect-logo-container .mattaconnect-logo {
     width: 100%;
     height: 100%;
     background-size: 75px;
@@ -58,6 +58,7 @@
     margin-left: 10px;
 }
 
+/* CHECKBOX SWITCH CONTROL STYLE */
 .toggle-switch-fa-lg input,
 .toggle-switch-fa input,
 .toggle-switch-fa-sm input,
@@ -101,7 +102,7 @@
 }
 
 
-/* the slider part of the switch*/
+/* the slider part of the switch */
 .fa-slider {
     position: absolute;
     top: 0;
@@ -202,7 +203,7 @@ witch-fa-lg input[type="checkbox"]:checked+.fa-slider i {
     height: 30px;
 }
 
-.matta_os-input-box {
+.mattaconnect-input-box {
     width: 450px !important;
 }
 
@@ -221,36 +222,17 @@ witch-fa-lg input[type="checkbox"]:checked+.fa-slider i {
     display: table;
   }
 
-  .camPreviewContainerNoRotate {
+.camPreviewContainer {
     cursor: crosshair;
     position:relative;
     height: fit-content;
   }
 
-.camPreviewContainerRotate {
-    cursor: crosshair;
-    position:relative;
-    width: 200px;
-    height: 356px;
-  }
-  
-.imgNoRotate {
+.camPreview {
     display: block;
     transform-origin: top left;
-    transform: rotate(0deg) translate(0%);
-    white-space: nowrap;
-    width: 400px;
-    max-width: 400px;
-}
-
-.imgRotate {
-    display: block;
-    transform-origin: top left;
-    transform: rotate(-90deg) translate(-100%);
-    white-space: nowrap;
-    width: 356px;
-    max-width: 356px;
-}
+        white-space: nowrap;
+    }
   
 .crosshair {
     position: absolute;

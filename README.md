@@ -40,6 +40,8 @@ Click "Install", and restart OctoPrint when prompted.
 
 ✨ Thats it! Now the MattaConnect plugin should be installed.
 
+(Note: We have noticed an issue with installing on Mac if Safari is used to download the ZIP package. Please ensure Safari preferences are set such that downloaded files are not automatically opened upon download).
+
 </details>
 <details>
   <summary><b>Clone onto Pi via SSH</b></summary>
