@@ -6,6 +6,7 @@ from octoprint.util.platform import get_os
 from octoprint.util.version import get_octoprint_version_string
 
 from .utils import (
+    inject_auth_key,
     make_timestamp,
     get_cloud_http_url,
     get_cloud_websocket_url,
@@ -167,12 +168,15 @@ class MattaCore:
                 msg = self.ws_data()
             elif json_msg.get("webrtc", None) == "request":
                 webrtc_data = self.request_webrtc_stream()
+                webrtc_data = inject_auth_key(webrtc_data)
                 msg = self.ws_data(extra_data=webrtc_data)
             elif json_msg.get("webrtc", None) == "remote_candidate":
                 webrtc_data = self.remote_webrtc_stream(candidate=json_msg["data"])
+                webrtc_data = inject_auth_key(webrtc_data)
                 msg = self.ws_data(extra_data=webrtc_data)
             elif json_msg.get("webrtc", None) == "offer":
                 webrtc_data = self.connect_webrtc_stream(offer=json_msg["data"])
+                webrtc_data = inject_auth_key(webrtc_data)
                 msg = self.ws_data(extra_data=webrtc_data)
             else:
                 self._printer.handle_cmds(json_msg)

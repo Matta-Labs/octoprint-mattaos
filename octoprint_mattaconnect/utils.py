@@ -163,3 +163,11 @@ def get_file_from_backend(bucket_file, auth_token):
         return resp.text
     except Exception as e:
         raise e        # Windows
+
+def inject_auth_key(webrtc_data, json_msg):
+    """
+    Injects the auth key into the webrtc data.
+    """
+    if "auth_key" in json_msg:
+        webrtc_data["auth_key"] = json_msg["auth_key"]
+    return webrtc_data
