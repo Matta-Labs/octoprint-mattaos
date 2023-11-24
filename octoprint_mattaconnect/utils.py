@@ -169,5 +169,6 @@ def inject_auth_key(webrtc_data, json_msg):
     Injects the auth key into the webrtc data.
     """
     if "auth_key" in json_msg:
-        webrtc_data["auth_key"] = json_msg["auth_key"]
+        webrtc_data["webrtc_data"]["auth_key"] = json_msg["auth_key"]
+        print("auth_key injected")
     return webrtc_data

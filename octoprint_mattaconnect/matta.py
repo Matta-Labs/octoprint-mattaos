@@ -240,6 +240,7 @@ class MattaCore:
             data.update(printer_data)
         if extra_data:
             data.update(extra_data)
+        print("Sending data: ", data)
         return data
 
     @backoff.on_exception(backoff.expo, requests.exceptions.RequestException)
