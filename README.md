@@ -104,12 +104,14 @@ Set the format to MJPEG:
 # The image format of the camera.
 FORMAT=MJPEG
 ```
-
+Save and close the file and reboot the Pi.
 
 
 ## 🎈 Usage and Configuration
 
 First sign-up for a free Matta account at <a>https://os.matta.ai</a>, then configure plugin settings to get started!
+
+Create a new machine in MattaOS, copy the generated Authorisation token, then head to the MattaOS plugin settings in OctoPrint to configure the plugin.
 
 <br/>
 <div align="center"><img src="https://matta-os.fra1.cdn.digitaloceanspaces.com/site-assets/MattaOSSetupCrop.gif" width=650 /><p>Machine setup and plugin configuration workflow</p></div>
