@@ -162,7 +162,7 @@ The new OctoPi camera stack provides a useful control interface for the camera d
 <br/>
 
 
-## More About Matta 🔷
+## 🔷 More About Matta
 
 <div  align="center" >
   <img src="https://matta-os.fra1.cdn.digitaloceanspaces.com/site-assets/matta-about.png" alt="Matta info">
@@ -177,7 +177,7 @@ At <a href="https://matta.ai"><strong>Matta</strong></a>, we are building AI to 
 
 
 
-## Contact 📞
+## 📞 Contact 
 
 Team Matta - [@mattaai](https://twitter.com/mattaai) - hello@matta.ai
 
