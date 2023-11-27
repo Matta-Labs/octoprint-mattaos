@@ -1,6 +1,6 @@
 <p align="center"><img src="https://uploads-ssl.webflow.com/63fa465ee0545971ce735482/64883f3b58342c1b87033b6d_Emblem_Black.svg" alt="Matta Logo" style="width:90px" /></p>
 <h1 align="center" style="margin-bottom:20px"><a href="https://matta.ai">MattaOS</a></h1>
-
+<img src="https://matta-os.fra1.cdn.digitaloceanspaces.com/site-assets/email_assets/VideoGridCover.png" />
 <p align="center">Connect your OctoPrint-connected printers to <a href="https://os.matta.ai">MattaOS</a>, for remote control, AI-powered error detection, fleet management, and more!</p>
 
 ## 🧐 About
@@ -16,12 +16,28 @@ Matta is working towards building full AI-powered closed-loop control of 3D prin
 - ⚡️ Advanced error detection using Matta's cutting-edge AI.
 - 📈 Keep track of your printing operations with Printer Analytics.
 - 👀 G-code viewer and analysis.
-- ⚙️ Coming soon: Controllable failure behaviour (notify, pause, stop).
+- ⚙️ Controllable failure behaviour (notify, pause, stop).
+
+<br/>
+<div align="center"><img src="https://matta-os.fra1.cdn.digitaloceanspaces.com/site-assets/MattaOS.gif" width=650 /><p>Monitoring a print with MattaOS</p></div>
+<br/>
+
+## 🐙 OctoPrint Camera Stack Installation
+
+OctoPrint-MattaOS is a plugin for OctoPrint, the snappy web interface for your 3D printer. If you have not setup OctoPrint, get started <a href="https://octoprint.org" > here.</a>
+
+The MattaOS OctoPrint plugin uses the <a href="https://octoprint.org/blog/2023/05/24/a-new-camera-stack-for-octopi">new camera stack for OctoPi</a>. If you have not already got the new camera stack, you must flash your Pi and install the new OctoPi image.
+
+<br/>
+<div align="center"><img src="https://matta-os.fra1.cdn.digitaloceanspaces.com/site-assets/octopisetup.gif" width=500 /><p>Installing OctoPi with new camera stack using Raspberry Pi Imager</p></div>
+<br/>
 
 ## 🚀 Plugin Installation
     
 This plugin is not yet available from the OctoPrint Plugin Repository and as such must be installed manually - this however is very easy to do. 
+
 <br/>
+
 Below are a number of methods for installation:
 
 <details>
@@ -74,7 +90,7 @@ sudo reboot
 
 <br/>
 
-OctoPrint sets the default image capture format to YUYV, however better streaming results can acheived with MJPEG. This can be changed in the `/boot/usb-default.conf` file as follows:
+OctoPrint sets the default image capture format to YUYV, however better streaming results can acheived with MJPEG. This can be changed in the `/boot/usb-default.conf` file on your Raspberry Pi as follows:
 <br/>
 
 ```shell 
@@ -95,6 +111,10 @@ FORMAT=MJPEG
 
 First sign-up for a free Matta account at <a>https://os.matta.ai</a>, then configure plugin settings to get started!
 
+<br/>
+<div align="center"><img src="https://matta-os.fra1.cdn.digitaloceanspaces.com/site-assets/MattaOSSetupCrop.gif" width=650 /><p>Machine setup and plugin configuration workflow</p></div>
+<br/>
+
 In settings there are a few variables which need to be configured for use:
 
 <details>
@@ -105,13 +125,15 @@ In settings there are a few variables which need to be configured for use:
 3. Paste this into the Authorisation token box in MattaOS settings.
 4. Click "Authorise" to connect the printer to MattaOS!
 </details>
-<br/>
+
 <details>
 <summary><b>WebRTC Stream URL*</b></summary>
 
 <br/>
 
-This is the streaming URL of your nozzle-cam streamer. The plugin only supports WebRTC streams, which require OctoPrint 1.8.0 and above.
+This is the streaming URL of your nozzle-cam streamer. The plugin only supports WebRTC streams, which require OctoPrint 1.8.0 and above, with the new camera stack.
+
+This will be ```http://<the hostname (or IP) of your Raspberry Pi>/webcam/webrtc```. Replace localhost with the hostname (or IP).
 
 <br/>
 
@@ -120,7 +142,9 @@ This is the streaming URL of your nozzle-cam streamer. The plugin only supports 
 <summary><b>Camera Snapshot URL*</b></summary>
 <br/>
 
-This is the snapshot URL of your nozzle-cam streamer. The plugin only supports WebRTC streams, which require OctoPrint 1.8.0 and above.
+This is the snapshot URL of your nozzle-cam streamer. The plugin only supports WebRTC streams, which require OctoPrint 1.8.0 and above, with the new camera stack.
+
+This will be ```http://<the hostname (or IP) of your Raspberry Pi>/webcam/?action=snapshot```
 
 1. Paste in the streamer snapshot URL.
 2. Click snap to test the connection.
@@ -128,6 +152,13 @@ This is the snapshot URL of your nozzle-cam streamer. The plugin only supports W
 </details>
 <br/>
 <p>*required for AI-powered error detection</p>
+
+The new OctoPi camera stack provides a useful control interface for the camera device. Once set up, you can find this at ```https://<the hostname (or IP) of your Raspberry Pi>/webcam/control```. Use this to focus your camera on the printer nozzle so that Grey-1 can accurately find errors.
+
+<br/>
+<div align="center"><img src="https://matta-os.fra1.cdn.digitaloceanspaces.com/site-assets/CameraStreamerControl.png" width=650 ><p>Camera-streamer control web interface</p></div>
+<br/>
+
 
 ## More About Matta 🔷
 
@@ -137,6 +168,7 @@ This is the snapshot URL of your nozzle-cam streamer. The plugin only supports W
 <br/>
 At <a href="https://matta.ai"><strong>Matta</strong></a>, we are building AI to push the boundaries of manufacturing. We train neural networks using vision to become manufacturing copilots, enabling next-generation error correction, material qualitification and part QC.
 
+<br/>
 <br/>
 
 <a href="https://matta.ai/greymatta"><strong>Check out the demo of our first-iteration AI, Grey-1</strong></a>
