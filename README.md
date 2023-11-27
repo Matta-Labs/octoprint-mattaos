@@ -1,11 +1,11 @@
 <p align="center"><img src="https://uploads-ssl.webflow.com/63fa465ee0545971ce735482/64883f3b58342c1b87033b6d_Emblem_Black.svg" alt="Matta Logo" style="width:90px" /></p>
-<h1 align="center" style="margin-bottom:20px"><a href="https://matta.ai">MattaConnect</a></h1>
+<h1 align="center" style="margin-bottom:20px"><a href="https://matta.ai">MattaOS</a></h1>
 
 <p align="center">Connect your OctoPrint-connected printers to <a href="https://os.matta.ai">MattaOS</a>, for remote control, AI-powered error detection, fleet management, and more!</p>
 
 ## 🧐 About
 
-The plugin allows users to control their printers using our intuitive web-interface, <a href="https://os.matta.ai">MattaOS</a>. MattaConnect brings Matta's data engine to OctoPrint, managing printer and webcam data, enabling next-level AI error detection and print job inspection.
+The plugin allows users to control their printers using our intuitive web-interface, <a href="https://os.matta.ai">MattaOS</a>. MattaOS brings Matta's data engine to OctoPrint, managing printer and webcam data, enabling next-level AI error detection and print job inspection.
 
 <br/>
 Matta is working towards building full AI-powered closed-loop control of 3D printing, enabling perfect quality, every time. By being an early user of our software, you help us build towards this goal!
@@ -31,14 +31,14 @@ Below are a number of methods for installation:
 Download the ZIP package for this repositiory using the green 'Code' dropdown above or the following code.
 
 ```shell
-wget https://github.com/Matta-Labs/octoprint-mattaconnect/archive/refs/heads/main.zip
+wget https://github.com/Matta-Labs/octoprint-mattaos/archive/refs/heads/main.zip
 ```
 
 In OctoPrint's plugin manager, select "+ Get More", and upload the downloaded .zip file in the provided box.
 
 Click "Install", and restart OctoPrint when prompted.
 
-✨ Thats it! Now the MattaConnect plugin should be installed.
+✨ Thats it! Now the MattaOS plugin should be installed.
 
 (Note: We have noticed an issue with installing on Mac if Safari is used to download the ZIP package. Please ensure Safari preferences are set such that downloaded files are not automatically opened upon download).
 
@@ -58,18 +58,18 @@ ssh pi@octopi.local
 Once on the Pi this git repo can be cloned and subsequently installed. To install the plugin in the correct location, the virtual environment used for OctoPrint must be activated. If you have installed OctoPrint via OctoPi (the Raspbian based SD card image for the Raspberry Pi that already includes OctoPrint plus everything you need to run it) then this is located at `~/oprint/bin/activate`. If you did a custom install of OctoPrint you probably know where your virtual environment is.
 
 ```shell
-git clone git@github.com:Matta-Labs/octoprint-mattaconnect.git
+git clone git@github.com:Matta-Labs/octoprint-mattaos.git
 source ~/oprint/bin/activate
 ```
 
 Now we have the correct environment we can easily install the packge using `pip` and subsequently reboot in order to load our plugin.
 
 ```shell
-pip install -e octoprint-mattaconnect
+pip install -e octoprint-mattaos
 sudo reboot
 ```
 
-✨ Thats it! Now the MattaConnect plugin should be installed.
+✨ Thats it! Now the MattaOS plugin should be installed.
 </details>
 
 <br/>
@@ -102,7 +102,7 @@ In settings there are a few variables which need to be configured for use:
 
 1. Create a printer in MattaOS.
 2. Copy the Authorisation token from the new printer's setup page.
-3. Paste this into the Authorisation token box in MattaConnect settings.
+3. Paste this into the Authorisation token box in MattaOS settings.
 4. Click "Authorise" to connect the printer to MattaOS!
 </details>
 <br/>
@@ -147,6 +147,6 @@ At <a href="https://matta.ai"><strong>Matta</strong></a>, we are building AI to 
 
 Team Matta - [@mattaai](https://twitter.com/mattaai) - hello@matta.ai
 
-Project Link: [https://github.com/Matta-Labs/octoprint-mattaconnect](https://github.com/Matta-Labs/octoprint-mattaconnect)
+Project Link: [https://github.com/Matta-Labs/octoprint-mattaos](https://github.com/Matta-Labs/octoprint-mattaos)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
