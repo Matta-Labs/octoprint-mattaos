@@ -5,10 +5,13 @@
 
 ## 🧐 About
 
-The plugin allows users to control their printers using our intuitive web-interface, <a href="https://os.matta.ai">MattaOS</a>. MattaOS brings Matta's data engine to OctoPrint, managing printer and webcam data, enabling next-level AI error detection and print job inspection.
+The plugin allows users to control their printers using our intuitive web-interface, <a href="https://os.matta.ai">MattaOS</a>. MattaOS brings Matta's data engine to OctoPrint, managing printer and webcam data, enabling next-level AI error detection and print job inspection. All that is required is a simple nozzle camera, and an OctoPrint-running 3D printer.
 
 <br/>
 Matta is working towards building full AI-powered closed-loop control of 3D printing, enabling perfect quality, every time. By being an early user of our software, you help us build towards this goal!
+<br/>
+
+
 
 ## ✨ Features
 
@@ -22,6 +25,8 @@ Matta is working towards building full AI-powered closed-loop control of 3D prin
 <div align="center"><img src="https://matta-os.fra1.cdn.digitaloceanspaces.com/site-assets/MattaOS.gif" width=650 /><p>Monitoring a print with MattaOS</p></div>
 <br/>
 
+
+
 ## 🐙 OctoPrint Camera Stack Installation
 
 OctoPrint-MattaOS is a plugin for OctoPrint, the snappy web interface for your 3D printer. If you have not setup OctoPrint, get started <a href="https://octoprint.org" > here.</a>
@@ -31,6 +36,8 @@ The MattaOS OctoPrint plugin uses the <a href="https://octoprint.org/blog/2023/0
 <br/>
 <div align="center"><img src="https://matta-os.fra1.cdn.digitaloceanspaces.com/site-assets/octopisetup.gif" width=500 /><p>Installing OctoPi with new camera stack using Raspberry Pi Imager</p></div>
 <br/>
+
+
 
 ## 🚀 Plugin Installation
     
@@ -105,6 +112,17 @@ Set the format to MJPEG:
 FORMAT=MJPEG
 ```
 Save and close the file and reboot the Pi.
+<br/>
+
+
+
+## 📸 Nozzle Cameras
+
+If you don't already have a nozzle camera installed, check our our <a href="https://github.com/Matta-Labs/camera-mounts">camera-mounts repository</a> to aid installation.
+
+Also please feel free to contribute your own nozzle camera designs to the repo!
+<br/>
+
 
 
 ## 🎈 Usage and Configuration
@@ -162,6 +180,7 @@ The new OctoPi camera stack provides a useful control interface for the camera d
 <br/>
 
 
+
 ## 🔷 More About Matta
 
 <div  align="center" >
@@ -176,7 +195,7 @@ At <a href="https://matta.ai"><strong>Matta</strong></a>, we are building AI to 
 <a href="https://matta.ai/greymatta"><strong>Check out the demo of our first-iteration AI, Grey-1</strong></a>
 
 
-
+<br/>
 ## 📞 Contact 
 
 Team Matta - [@mattaai](https://twitter.com/mattaai) - hello@matta.ai
