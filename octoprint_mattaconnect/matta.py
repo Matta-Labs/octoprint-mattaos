@@ -175,6 +175,7 @@ class MattaCore:
                     self._settings.set(["webrtc_auth_key"], webrtc_auth_key, force=True)
                     self._settings.save()
                     webrtc_data = self.request_webrtc_stream()
+                    self._logger.info("Injecting auth key into webrtc data: %s", webrtc_data)
                     webrtc_data = inject_auth_key(webrtc_data, json_msg, self._logger)
                     msg = self.ws_data(extra_data=webrtc_data)
             elif json_msg.get("webrtc", None) == "remote_candidate":
@@ -353,10 +354,13 @@ class MattaCore:
         }
         headers = {"Content-Type": "application/json"}
         try:
+            self._logger.info("Sending request to %s", self._settings.get(["webrtc_url"]))
             resp = requests.post(
                 self._settings.get(["webrtc_url"]), json=params, headers=headers
             )
+            self._logger.info("Response: %s", resp)
             if resp.status_code == 200:
+                self._logger.info("Response: %s", resp.json())
                 return {"webrtc_data": resp.json()}
         except requests.exceptions.RequestException as e:
             self._logger.error(e)
