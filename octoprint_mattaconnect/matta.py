@@ -167,9 +167,16 @@ class MattaCore:
                 self.user_online = False
                 msg = self.ws_data()
             elif json_msg.get("webrtc", None) == "request":
-                webrtc_data = self.request_webrtc_stream()
-                webrtc_data = inject_auth_key(webrtc_data, json_msg)
-                msg = self.ws_data(extra_data=webrtc_data)
+                # check if auth_key has already been received
+                webrtc_auth_key = json_msg.get("auth_key", None)
+                last_webrtc_auth_key = self._settings.get(["webrtc_auth_key"])
+                if webrtc_auth_key is not None and webrtc_auth_key != last_webrtc_auth_key:
+                    # save auth_key
+                    self._settings.set(["webrtc_auth_key"], webrtc_auth_key, force=True)
+                    self._settings.save()
+                    webrtc_data = self.request_webrtc_stream()
+                    webrtc_data = inject_auth_key(webrtc_data, json_msg)
+                    msg = self.ws_data(extra_data=webrtc_data)
             elif json_msg.get("webrtc", None) == "remote_candidate":
                 webrtc_data = self.remote_webrtc_stream(candidate=json_msg["data"])
                 webrtc_data = inject_auth_key(webrtc_data, json_msg)
