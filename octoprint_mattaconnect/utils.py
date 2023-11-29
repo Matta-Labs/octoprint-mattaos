@@ -5,7 +5,8 @@ import sentry_sdk
 import os
 from sys import platform
 
-MATTA_OS_ENDPOINT = "https://os.matta.ai/"
+# MATTA_OS_ENDPOINT = "https://os.matta.ai/"
+MATTA_OS_ENDPOINT = "http://192.168.0.18"
 
 MATTA_TMP_DATA_DIR = os.path.join(os.path.expanduser("~"), ".matta")
 
