@@ -185,6 +185,7 @@ class MattaconnectPlugin(
         """
         try:
             if tags:
+                print(tags)
                 # tags is set in format: {'source:file', 'filepos:371', 'fileline:7'}
                 if "source:file" in tags:
                     # get the current gcode line number
@@ -196,7 +197,7 @@ class MattaconnectPlugin(
                     line = line.replace("fileline:", "")
                     self.matta_os._printer.gcode_line_num_no_comments = line
                     self.matta_os._printer.gcode_cmd = cmd
-                elif "plugin:matta_os" in tags or "api:printer.command" in tags:
+                elif "plugin:mattaconnect" in tags or "api:printer.command" in tags:
                     self.matta_os.terminal_cmds.append(cmd)
         except Exception as e:
             self._logger.error(e)

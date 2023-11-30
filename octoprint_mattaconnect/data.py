@@ -140,7 +140,7 @@ class DataEngine:
             headers = generate_auth_headers(self._settings.get(["auth_token"]))
             try:
                 resp = requests.post(
-                    url=full_url, data=data, files=files, headers=headers
+                    url=full_url, data=data, files=files, headers=headers, timeout=5,
                 )
                 resp.raise_for_status()
             except requests.exceptions.RequestException as e:
@@ -171,7 +171,9 @@ class DataEngine:
         full_url = get_api_url() + "images/print/predict/new-image"
         headers = generate_auth_headers(self._settings.get(["auth_token"]))
         try:
-            resp = requests.post(url=full_url, data=data, files=files, headers=headers)
+            resp = requests.post(
+                url=full_url, data=data, files=files, headers=headers, timeout=5,
+            )
             resp.raise_for_status()
         except requests.exceptions.RequestException as e:
             self._logger.error(e)
@@ -209,7 +211,7 @@ class DataEngine:
             self._logger.debug(headers)
             try:
                 resp = requests.post(
-                    url=full_url, data=data, files=files, headers=headers
+                    url=full_url, data=data, files=files, headers=headers, timeout=5,
                 )
                 resp.raise_for_status()
                 self._logger.debug("Posting finished")

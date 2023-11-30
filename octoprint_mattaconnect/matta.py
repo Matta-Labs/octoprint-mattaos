@@ -274,6 +274,7 @@ class MattaCore:
             resp = requests.get(
                 url=full_url,
                 headers=headers,
+                timeout=5,
             )
             if resp.status_code == 200:
                 self._settings.set(["auth_token"], token, force=True)
@@ -355,7 +356,7 @@ class MattaCore:
         try:
             self._logger.info("Sending request to %s", self._settings.get(["webrtc_url"]))
             resp = requests.post(
-                self._settings.get(["webrtc_url"]), json=params, headers=headers
+                self._settings.get(["webrtc_url"]), json=params, headers=headers, timeout=5,
             )
             self._logger.info("Response: %s", resp)
             if resp.status_code == 200:
@@ -387,7 +388,7 @@ class MattaCore:
         headers = {"Content-Type": "application/json"}
         try:
             resp = requests.post(
-                self._settings.get(["webrtc_url"]), json=params, headers=headers
+                self._settings.get(["webrtc_url"]), json=params, headers=headers, timeout=5,
             )
             if resp.status_code == 200:
                 return {"webrtc_data": resp.json()}
@@ -417,7 +418,7 @@ class MattaCore:
         headers = {"Content-Type": "application/json"}
         try:
             resp = requests.post(
-                self._settings.get(["webrtc_url"]), json=params, headers=headers
+                self._settings.get(["webrtc_url"]), json=params, headers=headers, timeout=5,
             )
             if resp.status_code == 200:
                 return {"webrtc_data": resp.json()}

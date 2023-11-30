@@ -155,7 +155,7 @@ def get_file_from_backend(bucket_file, auth_token):
     data = {"bucket_file": bucket_file}
     try:
         resp = requests.post(
-            url=full_url, data=data, headers=headers
+            url=full_url, data=data, headers=headers, timeout=5,
         )
         # print data from resp
         resp.raise_for_status()
