@@ -118,7 +118,7 @@ class MattaconnectPlugin(
             return flask.jsonify({"success": success, "text": status_text})
 
         if command == "ws_reconnect":
-            self.matta_os.ws_connect()
+            self._logger.info("\nReconnecting to Matta OS... ws_reconnect\n")
             if self.matta_os.ws_connected():
                 status_text = "Successfully connected to Matta OS."
                 success = True
@@ -185,7 +185,6 @@ class MattaconnectPlugin(
         """
         try:
             if tags:
-                print(tags)
                 # tags is set in format: {'source:file', 'filepos:371', 'fileline:7'}
                 if "source:file" in tags:
                     # get the current gcode line number

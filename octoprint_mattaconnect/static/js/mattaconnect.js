@@ -70,9 +70,6 @@ $(function() {
         self.onAfterBinding = function() {
             self.snap_image();
             self.updateCrosshairOnLoad();
-            if (self.auth_token()) {
-                self.settings_test_token();
-            }
         }
 
         self.updateCrosshairOnLoad = function() {

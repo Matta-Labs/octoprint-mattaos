@@ -85,26 +85,27 @@ class MattaCore:
         self._logger.debug("Connecting websocket")
         try:
             full_url = get_cloud_websocket_url() + "api/v1/ws/printer"
+            if self.ws_connected():
+                self.ws.disconnect()
+                self.ws = None
+                if self.ws_thread:
+                    self.ws_thread.join()
+                    self.ws_thread = None
             self.ws = Socket(
-                on_open=lambda ws: self.ws_on_open(ws),
-                on_message=lambda ws, msg: self.ws_on_message(ws, msg),
-                on_close=lambda ws, close_status_code, close_msg: self.ws_on_close(
-                    ws, close_status_code, close_msg
-                ),
-                on_error=lambda ws, error: self.ws_on_error(ws, error),
+                on_message=lambda ws, msg: self.ws_on_message(msg),
                 url=full_url,
                 token=self._settings.get(["auth_token"]),
             )
-            ws_thread = threading.Thread(target=self.ws.run)
-            ws_thread.daemon = True
-            ws_thread.start()
+            self.ws_thread = threading.Thread(target=self.ws.run)
+            self.ws_thread.daemon = True
+            self.ws_thread.start()
             if wait:
                 time.sleep(2) # wait for 2 seconds
         except Exception as e:
             self._logger.error("ws_on_close: %s", e)
             pass
 
-    def ws_on_open(self, ws):
+    def ws_on_open(self):
         """
         Callback function called when the WebSocket connection is opened.
 
@@ -114,7 +115,7 @@ class MattaCore:
         """
         self._logger.debug("Opening MattaConnect websocket...")
 
-    def ws_on_close(self, ws, close_status_code, close_msg):
+    def ws_on_close(self, close_status_code, close_msg):
         """
         Callback function called when the WebSocket connection is closed.
 
@@ -127,14 +128,9 @@ class MattaCore:
         self._logger.debug(
             f"Closing websocket... code: {close_status_code} msg: {close_msg}"
         )
-        try:
-            self.ws.disconnect()
-            self.ws = None
-        except Exception as e:
-            self._logger.error("ws_on_close: %s", e)
-            pass
+        self.ws.disconnect()
 
-    def ws_on_error(self, ws, error):
+    def ws_on_error(self, error):
         """
         Callback function called when a WebSocket error occurs.
 
@@ -143,9 +139,10 @@ class MattaCore:
             error: The error that occurred.
 
         """
+        self.ws.disconnect()
         self._logger.error("ws_on_error: %s", error)
 
-    def ws_on_message(self, ws, msg):
+    def ws_on_message(self, msg):
         """
         Callback function called when a message is received over the WebSocket connection.
 
@@ -205,9 +202,6 @@ class MattaCore:
                 self._logger.info("Sending...")
                 self.ws.send_msg(msg)
                 self._logger.info("Sent")
-            else:
-                self.ws_connect()
-                self.ws.send_msg(msg)
         except Exception as e:
             self._logger.error("ws_send: %s", e)
         
@@ -250,7 +244,6 @@ class MattaCore:
             data.update(extra_data)
         return data
 
-    @backoff.on_exception(backoff.expo, requests.exceptions.RequestException)
     def test_auth_token(self, token):
         """
         Tests the validity of an authorization token.
@@ -281,7 +274,6 @@ class MattaCore:
                 self._settings.save()
                 if self.ws_connected():
                     self.ws.disconnect()
-                self.ws_connect()
                 status_text = "All is tickety boo! Your token is valid."
                 success = True
             elif resp.status_code == 401:
@@ -335,6 +327,7 @@ class MattaCore:
                         self.ws = None
                 except Exception as e:
                     self._logger.error("ws_send_data: %s", e)
+            time.sleep(0.1)  # slow things down to 100ms
 
     def request_webrtc_stream(self):
         """
