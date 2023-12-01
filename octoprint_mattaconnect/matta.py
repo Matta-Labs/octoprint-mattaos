@@ -105,43 +105,6 @@ class MattaCore:
             self._logger.error("ws_on_close: %s", e)
             pass
 
-    def ws_on_open(self):
-        """
-        Callback function called when the WebSocket connection is opened.
-
-        Args:
-            ws: The WebSocket instance.
-
-        """
-        self._logger.debug("Opening MattaConnect websocket...")
-
-    def ws_on_close(self, close_status_code, close_msg):
-        """
-        Callback function called when the WebSocket connection is closed.
-
-        Args:
-            ws: The WebSocket instance.
-            close_status_code (int): The close status code.
-            close_msg (str): The close message.
-
-        """
-        self._logger.debug(
-            f"Closing websocket... code: {close_status_code} msg: {close_msg}"
-        )
-        self.ws.disconnect()
-
-    def ws_on_error(self, error):
-        """
-        Callback function called when a WebSocket error occurs.
-
-        Args:
-            ws: The WebSocket instance.
-            error: The error that occurred.
-
-        """
-        self.ws.disconnect()
-        self._logger.error("ws_on_error: %s", error)
-
     def ws_on_message(self, msg):
         """
         Callback function called when a message is received over the WebSocket connection.
