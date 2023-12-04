@@ -209,7 +209,7 @@ At <a href="https://matta.ai"><strong>Matta</strong></a>, we are building AI to 
 
 ## 📞 Contact 
 
-Team Matta - [@mattaai](https://twitter.com/mattaai) - hello@matta.ai
+Team Matta - [@mattalabs](https://twitter.com/mattalabs) - hello@matta.ai
 
 Project Link: [https://github.com/Matta-Labs/octoprint-mattaos](https://github.com/Matta-Labs/octoprint-mattaos)
 
