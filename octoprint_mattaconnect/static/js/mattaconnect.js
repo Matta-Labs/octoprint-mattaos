@@ -84,7 +84,6 @@ $(function() {
             nozzle_tip_coords_y.textContent = self.nozzle_tip_coords_y();
         }
         
-
         //---------------------------------------------------
         // Constants
         //---------------------------------------------------
@@ -113,7 +112,7 @@ $(function() {
         //---------------------------------------------------
 
         settings_snap_btn.addEventListener('click', function(event){
-            self.snap_image();
+            self.request_snapshot();
         });
         
         self.snap_image = function() {
@@ -131,6 +130,41 @@ $(function() {
                 console.log("Error loading snapshot.");
                 camPreview.src = IMAGE_PLACEHOLDER;
             };
+        };
+
+        self.request_snapshot = function() {
+            const url_input = document.getElementById("settings_snap_input");
+            console.log("Requesting snapshot from " + url_input.value);
+            let data = {
+                command: "snapshot",
+                url: url_input.value,
+            };
+            $.ajax({
+                // url for /api/plugin/matta_os getting base and port from window.location
+                // /api/plugin/matta_os for working in octoplug-internal, /api/plugin/mattaconnect for working in MattaConnect
+                url: window.location.origin + "/api/plugin/mattaconnect",
+                type: "POST",
+                data: JSON.stringify(data),
+                contentType: "application/json",
+                dataType: "json",
+                success: function(status) {
+                    console.log(status);
+                    if (status.success) {
+                        camPreview.src = "data:image/png;base64," + status.image ;
+                        new PNotify({
+                            title: gettext("Snapshot"),
+                            text: gettext(status.text),
+                            type: "success"
+                        });
+                    } else {
+                        new PNotify({
+                            title: gettext("Snapshot"),
+                            text: gettext(status.text),
+                            type: "error"
+                        });
+                    }
+                }
+            });
         };
 
         self.updateImageDimensions = function() {
@@ -248,7 +282,6 @@ $(function() {
         };
     
         self.settings_test_token = function() {
-            console.log(`Connecting to Matta OS with token: ${settings_token_input.value}`)
             let data = {
                 command: "test_auth_token",
                 auth_token: settings_token_input.value,

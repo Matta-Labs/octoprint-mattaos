@@ -152,7 +152,6 @@ class MattaCore:
 
         """
         json_msg = json.loads(msg)
-        self._logger.info("ws_on_message: %s", json_msg)
         if (
             json_msg["token"] == self._settings.get(["auth_token"])
             and json_msg["interface"] == "client"
@@ -172,7 +171,6 @@ class MattaCore:
                     self._settings.set(["webrtc_auth_key"], webrtc_auth_key, force=True)
                     self._settings.save()
                     webrtc_data = self.request_webrtc_stream()
-                    self._logger.info("Injecting auth key into webrtc data: %s", webrtc_data)
                     webrtc_data = inject_auth_key(webrtc_data, json_msg, self._logger)
                     msg = self.ws_data(extra_data=webrtc_data)
             elif json_msg.get("webrtc", None) == "remote_candidate":
@@ -199,9 +197,7 @@ class MattaCore:
         """
         try:
             if self.ws_connected():
-                self._logger.info("Sending...")
                 self.ws.send_msg(msg)
-                self._logger.info("Sent")
         except Exception as e:
             self._logger.error("ws_send: %s", e)
         
@@ -289,6 +285,38 @@ class MattaCore:
             )
             status_text = "Error. Please check OctoPrint's internet connection"
         return success, status_text
+    
+    def take_snapshot(self, url):
+        """
+        Takes a snapshot of the current print job.
+
+        Args:
+            url (str): The URL to send the snapshot to.
+
+        Returns:
+            Image: The snapshot image.
+        """
+        success = False
+        image = None
+        status_text = "Oh no! An unknown error occurred."
+        if url == "":
+            status_text = "Please enter a URL."
+            return success, status_text, image
+        self._settings.set(["snapshot_url"], url.strip(), force=True)
+        self._settings.save()
+        try:
+            resp = requests.get(self._settings.get(["snapshot_url"]), stream=True)  # Add a timeout
+        except requests.exceptions.RequestException as e:
+            self._logger.error("Error when sending request: %s", e)
+            status_text = "Error when sending request: " + str(e)
+            return success, status_text, image
+        if resp.status_code == 200:
+            success = True
+            image = resp.content
+            status_text = "Image captured successfully."
+        else:
+            status_text = "Error: received status code " + str(resp.status_code)
+        return success, status_text, image
 
     def websocket_thread_loop(self):
         """
@@ -306,7 +334,6 @@ class MattaCore:
                 while self.ws_connected():
                     current_time = time.perf_counter()
                     if (current_time - old_time) > self.ws_loop_time - time_buffer:
-                        self._logger.debug(f"Sending data: {current_time - old_time}")
                         time_buffer = max(
                             0, current_time - old_time - self.ws_loop_time
                         )
@@ -347,13 +374,10 @@ class MattaCore:
         }
         headers = {"Content-Type": "application/json"}
         try:
-            self._logger.info("Sending request to %s", self._settings.get(["webrtc_url"]))
             resp = requests.post(
                 self._settings.get(["webrtc_url"]), json=params, headers=headers, timeout=5,
             )
-            self._logger.info("Response: %s", resp)
             if resp.status_code == 200:
-                self._logger.info("Response: %s", resp.json())
                 return {"webrtc_data": resp.json()}
         except requests.exceptions.RequestException as e:
             self._logger.error(e)

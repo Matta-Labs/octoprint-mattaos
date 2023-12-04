@@ -3,6 +3,7 @@ import threading
 import requests
 import csv
 import json
+import io
 from .utils import (
     get_api_url,
     get_gcode_upload_dir,
@@ -13,6 +14,7 @@ from .utils import (
 )
 import os
 import shutil
+from PIL import Image
 
 
 class DataEngine:
@@ -158,7 +160,24 @@ class DataEngine:
             requests.exceptions.RequestException: If an error occurs during the upload.
         """
         self._logger.debug("Posting image")
-        image_name = f"image_{self.image_count}.jpg"
+        image_name = f"image_{self.image_count}.png"
+
+        # Load the image using PIL
+        pil_image = Image.open(io.BytesIO(image))
+
+        # Flip the image if necessary
+        if self._settings.get(["flip_h"]):
+            pil_image = pil_image.transpose(Image.FLIP_LEFT_RIGHT)
+        if self._settings.get(["flip_v"]):
+            pil_image = pil_image.transpose(Image.FLIP_TOP_BOTTOM)
+        if self._settings.get(["rotate"]):
+            pil_image = pil_image.transpose(Image.ROTATE_90)
+
+        # Convert the PIL image back to bytes
+        byte_arr = io.BytesIO()
+        pil_image.save(byte_arr, format="PNG")
+        image = byte_arr.getvalue()
+
         metadata = {
             "name": image_name,
             "img_file": image_name,
@@ -166,7 +185,7 @@ class DataEngine:
         metadata.update(self.create_metadata())
         data = {"data": json.dumps(metadata)}
         files = {
-            "image_obj": (image_name, image, "image/generic"),
+            "image_obj": (image_name, image, "image/png"),
         }
         full_url = get_api_url() + "images/print/predict/new-image"
         headers = generate_auth_headers(self._settings.get(["auth_token"]))
@@ -192,8 +211,6 @@ class DataEngine:
         with open(csv_path, "rb") as csv:
             gcode_name = os.path.basename(gcode_path)
             csv_name = os.path.basename(csv_path)
-            self._logger.debug(gcode_name)
-            self._logger.debug(csv_name)
             metadata = {
                 "name": os.path.splitext(gcode_name)[0],
                 "long_name": job_name,
@@ -204,18 +221,13 @@ class DataEngine:
             files = {
                 "csv_obj": (csv_name, csv, "text/csv"),
             }
-            self._logger.debug(json.dumps(data))
             full_url = get_api_url() + "print-jobs/remote/end-job"
-            self._logger.debug(full_url)
             headers = generate_auth_headers(self._settings.get(["auth_token"]))
-            self._logger.debug(headers)
             try:
                 resp = requests.post(
                     url=full_url, data=data, files=files, headers=headers, timeout=5,
                 )
                 resp.raise_for_status()
-                self._logger.debug("Posting finished")
-                self._logger.debug(resp)
             except requests.exceptions.RequestException as e:
                 self._logger.error(e)
 

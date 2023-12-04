@@ -140,11 +140,14 @@ def make_timestamp():
 
 def init_sentry(version):
     sentry_sdk.init(
-        dsn="https://8a15383bc2f14c1ca06e4fe5c1788265@o289703.ingest.sentry.io/4504774026592256",
-        # Set traces_sample_rate to 1.0 to capture 100%
+        dsn="https://687d2f7c85af84f983b3d9980468c24c@o289703.ingest.sentry.io/4506337826570240",
+        # Set traces_sample_rate to 0.1 to capture 10%
         # of transactions for performance monitoring.
+        traces_sample_rate=0.1,
+        # Set profiles_sample_rate to 0.1 to profile 10%
+        # of sampled transactions.
         # We recommend adjusting this value in production.
-        traces_sample_rate=0.01,
+        profiles_sample_rate=0.1,
         release=f"MattaOSLite@{version}",
     )
     

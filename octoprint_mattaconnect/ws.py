@@ -36,11 +36,9 @@ class Socket:
         )
 
     def disconnect(self):
-        _logger.debug("Disconnecting the websocket...")
         try:
             self.socket.keep_running = False
             self.socket.close()
             self.socket = None
         except Exception as e:
             _logger.error("Socket disconnect: %s", e)
-        _logger.debug("The websocket has been closed.")
