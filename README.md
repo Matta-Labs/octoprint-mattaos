@@ -51,7 +51,7 @@ Copy the following URL to the latest version of Matta OS's OctoPrint plugin:
 https://github.com/Matta-Labs/octoprint-mattaos/archive/refs/heads/main.zip
 ```
 
-In OctoPrint's plugin manager, select "+ Get More", and paste this URL into the **...From URL** section in the OctoPrint plugin manager inside the input with **Enter URL..**.
+In OctoPrint's plugin manager, select "+ Get More", and paste this URL into the "...From URL" section in the OctoPrint plugin manager inside the input with "Enter URL..".
 
 Click "Install", and restart OctoPrint when prompted.
 
