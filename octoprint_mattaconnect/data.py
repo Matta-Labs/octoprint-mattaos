@@ -405,4 +405,4 @@ class DataEngine:
                 old_time = current_time
                 self.update_csv()
                 self.update_image()
-                time.sleep(0.1)  # slow things down to 100ms to run other threads
+            time.sleep(0.1)  # slow things down to 100ms to run other threads
