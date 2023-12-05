@@ -102,7 +102,7 @@ class MattaCore:
             if wait:
                 time.sleep(2) # wait for 2 seconds
         except Exception as e:
-            self._logger.error("ws_on_close: %s", e)
+            self._logger.debug("ws_on_close: %s", e)
             pass
 
     def ws_on_message(self, msg):
@@ -115,6 +115,7 @@ class MattaCore:
 
         """
         json_msg = json.loads(msg)
+        self._logger.debug("ws_on_message: %s", json_msg)
         if (
             json_msg["token"] == self._settings.get(["auth_token"])
             and json_msg["interface"] == "client"
@@ -162,7 +163,7 @@ class MattaCore:
             if self.ws_connected():
                 self.ws.send_msg(msg)
         except Exception as e:
-            self._logger.error("ws_send: %s", e)
+            self._logger.debug("ws_send: %s", e)
         
 
     def ws_data(self, extra_data=None):
@@ -270,7 +271,7 @@ class MattaCore:
         try:
             resp = requests.get(self._settings.get(["snapshot_url"]), stream=True)  # Add a timeout
         except requests.exceptions.RequestException as e:
-            self._logger.error("Error when sending request: %s", e)
+            self._logger.debug("Error when sending request: %s", e)
             status_text = "Error when sending request: " + str(e)
             return success, status_text, image
         if resp.status_code == 200:
@@ -306,7 +307,7 @@ class MattaCore:
                     time.sleep(0.1)  # slow things down to 100ms
                     self.update_ws_send_interval()
             except Exception as e:
-                self._logger.error("websocket_thread_loop: %s", e)
+                self._logger.debug("ERROR websocket_thread_loop: %s", e)
                 if self.ws_connected():
                     self.ws.disconnect()
                     self.ws = None
@@ -316,7 +317,7 @@ class MattaCore:
                         self.ws.disconnect()
                         self.ws = None
                 except Exception as e:
-                    self._logger.error("ws_send_data: %s", e)
+                    self._logger.debug("ERROR ws_send_data: %s", e)
             time.sleep(0.1)  # slow things down to 100ms
 
     def request_webrtc_stream(self):
@@ -343,9 +344,9 @@ class MattaCore:
             if resp.status_code == 200:
                 return {"webrtc_data": resp.json()}
         except requests.exceptions.RequestException as e:
-            self._logger.error(e)
+            self._logger.debug("ERROR RequestException: ", e)
         except Exception as e:
-            self._logger.error(e)
+            self._logger.debug("ERROR: ", e)
         return None
 
     def remote_webrtc_stream(self, candidate):
@@ -373,9 +374,9 @@ class MattaCore:
             if resp.status_code == 200:
                 return {"webrtc_data": resp.json()}
         except requests.exceptions.RequestException as e:
-            self._logger.error(e)
+            self._logger.debug("ERROR RequestException: ", e)
         except Exception as e:
-            self._logger.error(e)
+            self._logger.debug("ERROR: ", e)
         return None
 
     def connect_webrtc_stream(self, offer):
@@ -403,7 +404,7 @@ class MattaCore:
             if resp.status_code == 200:
                 return {"webrtc_data": resp.json()}
         except requests.exceptions.RequestException as e:
-            self._logger.error(e)
+            self._logger.debug("ERROR RequestException: ", e)
         except Exception as e:
-            self._logger.error(e)
+            self._logger.debug("ERROR: ", e)
         return None
