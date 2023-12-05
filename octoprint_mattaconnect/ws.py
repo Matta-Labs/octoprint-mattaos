@@ -2,19 +2,18 @@ import json
 import logging
 import websocket
 
-_logger = logging.getLogger("octoprint.plugins.matta_os")
+_logger = logging.getLogger("octoprint.plugins.mattaconnect")
 
 
 class Socket:
-    def __init__(self, on_open, on_message, on_close, on_error, url, token):
-        self.connect(on_open, on_message, on_close, on_error, url, token)
+    def __init__(self, on_message, url, token):
+        self.connect(on_message, url, token)
 
     def run(self):
         try:
             self.socket.run_forever()
         except Exception as e:
             _logger.error("Socket run: %s", e)
-            pass
 
     def send_msg(self, msg):
         try:
@@ -27,20 +26,19 @@ class Socket:
             pass
 
     def connected(self):
-        return self.socket.sock and self.socket.sock.connected
+        return self.socket and self.socket.sock and self.socket.sock.connected
 
-    def connect(self, on_open, on_message, on_close, on_error, url, token):
+    def connect(self, on_message, url, token):
         url = url + "?token=" + token
         self.socket = websocket.WebSocketApp(
             url,
-            on_open=on_open,
             on_message=on_message,
-            on_close=on_close,
-            on_error=on_error,
         )
 
     def disconnect(self):
-        _logger.debug("Disconnecting the websocket...")
-        self.socket.keep_running = False
-        self.socket.close()
-        _logger.debug("The websocket has been closed.")
+        try:
+            self.socket.keep_running = False
+            self.socket.close()
+            self.socket = None
+        except Exception as e:
+            _logger.error("Socket disconnect: %s", e)

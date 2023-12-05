@@ -140,11 +140,14 @@ def make_timestamp():
 
 def init_sentry(version):
     sentry_sdk.init(
-        dsn="https://8a15383bc2f14c1ca06e4fe5c1788265@o289703.ingest.sentry.io/4504774026592256",
-        # Set traces_sample_rate to 1.0 to capture 100%
+        dsn="https://687d2f7c85af84f983b3d9980468c24c@o289703.ingest.sentry.io/4506337826570240",
+        # Set traces_sample_rate to 0.1 to capture 10%
         # of transactions for performance monitoring.
+        traces_sample_rate=0.1,
+        # Set profiles_sample_rate to 0.1 to profile 10%
+        # of sampled transactions.
         # We recommend adjusting this value in production.
-        traces_sample_rate=0.01,
+        profiles_sample_rate=0.1,
         release=f"MattaOSLite@{version}",
     )
     
@@ -155,10 +158,19 @@ def get_file_from_backend(bucket_file, auth_token):
     data = {"bucket_file": bucket_file}
     try:
         resp = requests.post(
-            url=full_url, data=data, headers=headers
+            url=full_url, data=data, headers=headers, timeout=5,
         )
         # print data from resp
         resp.raise_for_status()
         return resp.text
     except Exception as e:
         raise e        # Windows
+
+def inject_auth_key(webrtc_data, json_msg, logger):
+    """
+    Injects the auth key into the webrtc data.
+    """
+    if "auth_key" in json_msg:
+        webrtc_data["webrtc_data"]["auth_key"] = json_msg["auth_key"]
+        logger.debug("MattaConnect plugin - injected auth key into webrtc data.", json_msg["auth_key"])
+    return webrtc_data

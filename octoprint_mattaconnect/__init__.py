@@ -1,5 +1,6 @@
 # coding=utf-8
 import flask
+import base64
 import octoprint.plugin
 from .utils import init_sentry
 
@@ -88,8 +89,8 @@ class MattaconnectPlugin(
         """
         return dict(
             test_auth_token=["auth_token"],
+            snapshot=["url"],
             set_enabled=[],
-            ws_reconnect=[],
         )
 
     def is_api_adminonly(self):
@@ -116,17 +117,15 @@ class MattaconnectPlugin(
             auth_token = data["auth_token"]
             success, status_text = self.matta_os.test_auth_token(token=auth_token)
             return flask.jsonify({"success": success, "text": status_text})
-
-        if command == "ws_reconnect":
-            self.matta_os.ws_connect()
-            if self.matta_os.ws_connected():
-                status_text = "Successfully connected to Matta OS."
-                success = True
+        
+        if command == "snapshot":
+            success, status_text, image = self.matta_os.take_snapshot(url=data["url"])
+            if image is not None:
+                # Convert the image to base64
+                image_base64 = base64.b64encode(image).decode("utf-8")
             else:
-                status_text = "Failed to connect to Matta OS."
-                success = False
-
-            return flask.jsonify({"success": success, "text": status_text})
+                image_base64 = None
+            return flask.jsonify({"success": success, "text": status_text, "image": image_base64})
 
     def parse_received_lines(self, comm_instance, line, *args, **kwargs):
         """
@@ -196,7 +195,7 @@ class MattaconnectPlugin(
                     line = line.replace("fileline:", "")
                     self.matta_os._printer.gcode_line_num_no_comments = line
                     self.matta_os._printer.gcode_cmd = cmd
-                elif "plugin:matta_os" in tags or "api:printer.command" in tags:
+                elif "plugin:mattaconnect" in tags or "api:printer.command" in tags:
                     self.matta_os.terminal_cmds.append(cmd)
         except Exception as e:
             self._logger.error(e)
