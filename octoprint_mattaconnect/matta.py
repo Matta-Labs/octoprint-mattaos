@@ -1,7 +1,6 @@
 import time
 import json
 import threading
-import backoff
 from octoprint.util.platform import get_os
 from octoprint.util.version import get_octoprint_version_string
 
@@ -287,7 +286,6 @@ class MattaCore:
         Sends data over the WebSocket connection.
 
         This method continuously sends data while the WebSocket connection is active.
-        It uses an exponential backoff strategy for reconnection attempts.
 
         """
         old_time = time.perf_counter()
