@@ -24,7 +24,7 @@ Matta is working towards building full AI-powered closed-loop control of 3D prin
 
 ## 🐙 OctoPrint Camera Stack Installation
 
-OctoPrint-MattaOS is a plugin for OctoPrint, the snappy web interface for your 3D printer. If you have not setup OctoPrint, get started <a href="https://octoprint.org" > here.</a>
+OctoPrint-MattaOS is a plugin for <a href="https://github.com/OctoPrint/OctoPrint">OctoPrint</a>, the snappy web interface for your 3D printer. If you have not setup OctoPrint, get started <a href="https://octoprint.org" > here.</a>
 
 The Matta OS OctoPrint plugin uses the <a href="https://octoprint.org/blog/2023/05/24/a-new-camera-stack-for-octopi">new camera stack for OctoPi</a>. If you have not already got the new camera stack, you must flash your Pi and install the new OctoPi image.
 
