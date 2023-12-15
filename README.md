@@ -1,5 +1,5 @@
 <p align="center"><img src="https://uploads-ssl.webflow.com/63fa465ee0545971ce735482/64883f3b58342c1b87033b6d_Emblem_Black.svg" alt="Matta Logo" style="width:50px" /></p>
-<h1 align="center" style="margin-bottom:20px"><a href="https://matta.ai">MattaOS</a></h1>
+<h1 align="center" style="margin-bottom:20px"><a href="https://matta.ai">MattaOS</a> for OctoPrint</h1>
 <img src="https://matta-os.fra1.cdn.digitaloceanspaces.com/site-assets/email_assets/VideoGridCover.png" />
 <p>Connect your OctoPrint-connected printers to <a href="https://os.matta.ai">MattaOS</a>, for remote control, AI-powered error detection, fleet management, and more!</p>
 
