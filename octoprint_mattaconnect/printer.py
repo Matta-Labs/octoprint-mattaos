@@ -1,7 +1,6 @@
 import base64
 import re
 import os
-import base64
 from .utils import get_file_from_backend, make_timestamp
 from octoprint.filemanager import FileDestinations
 from octoprint.filemanager.util import StreamWrapper, DiskFileWrapper
