@@ -177,6 +177,7 @@ class MattaCore:
 
         """
         data = {
+            "type": "printer_packet",
             "token": self._settings.get(["auth_token"]),
             "timestamp": make_timestamp(),
             "files": self._file_manager.list_files(recursive=True),
