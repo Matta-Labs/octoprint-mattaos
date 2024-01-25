@@ -121,9 +121,9 @@ class MattaPrinter:
                 new_z_offset = float(match.group(1))
                 self.set_z_offset(new_z_offset)
         except re.error as e:
-            self._logger.error(f"Regex Error in virtual printer: {e}")
+            self._logger.debug(f"Regex Error in virtual printer: {e}")
         except Exception as e:
-            self._logger.error(f"General Error in virtual printer: {e}")
+            self._logger.debug(f"General Error in virtual printer: {e}")
 
     def get_current_job(self):
         """Retrieves information on the current print job"""

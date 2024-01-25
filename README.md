@@ -1,18 +1,13 @@
-<p align="center"><img src="https://uploads-ssl.webflow.com/63fa465ee0545971ce735482/64883f3b58342c1b87033b6d_Emblem_Black.svg" alt="Matta Logo" style="width:90px" /></p>
-<h1 align="center" style="margin-bottom:20px"><a href="https://matta.ai">MattaOS</a></h1>
+<p align="center"><img src="https://uploads-ssl.webflow.com/63fa465ee0545971ce735482/64883f3b58342c1b87033b6d_Emblem_Black.svg" alt="Matta Logo" style="width:50px" /></p>
+<h1 align="center" style="margin-bottom:20px"><a href="https://matta.ai">MattaOS</a> for OctoPrint</h1>
 <img src="https://matta-os.fra1.cdn.digitaloceanspaces.com/site-assets/email_assets/VideoGridCover.png" />
-<p align="center">Connect your OctoPrint-connected printers to <a href="https://os.matta.ai">MattaOS</a>, for remote control, AI-powered error detection, fleet management, and more!</p>
+<p>Connect your OctoPrint-connected printers to <a href="https://os.matta.ai">MattaOS</a>, for remote control, AI-powered error detection, fleet management, and more!</p>
 
 ## 🧐 About
 
-The plugin allows users to control their printers using our intuitive web-interface, <a href="https://os.matta.ai">MattaOS</a>. MattaOS brings Matta's data engine to OctoPrint, managing printer and webcam data, enabling next-level AI error detection and print job inspection. All that is required is a simple nozzle camera, and an OctoPrint-running 3D printer.
+The plugin allows users to control their printers using our intuitive web-interface, <a href="https://os.matta.ai">Matta OS</a>. Matta OS brings Matta's data engine to OctoPrint, managing printer and webcam data, enabling next-level AI error detection and print job inspection. All that is required is a simple nozzle camera, and an OctoPrint-running 3D printer.
 
-<br/>
 Matta is working towards building full AI-powered closed-loop control of 3D printing, enabling perfect quality, every time. By being an early user of our software, you help us build towards this goal!
-<br/>
-
-
-
 ## ✨ Features
 
 - 🛜 Remote printer control via MattaOS, our intuitive web-interface.
@@ -29,9 +24,9 @@ Matta is working towards building full AI-powered closed-loop control of 3D prin
 
 ## 🐙 OctoPrint Camera Stack Installation
 
-OctoPrint-MattaOS is a plugin for OctoPrint, the snappy web interface for your 3D printer. If you have not setup OctoPrint, get started <a href="https://octoprint.org" > here.</a>
+OctoPrint-MattaOS is a plugin for <a href="https://github.com/OctoPrint/OctoPrint">OctoPrint</a>, the snappy web interface for your 3D printer. If you have not setup OctoPrint, get started <a href="https://octoprint.org" > here.</a>
 
-The MattaOS OctoPrint plugin uses the <a href="https://octoprint.org/blog/2023/05/24/a-new-camera-stack-for-octopi">new camera stack for OctoPi</a>. If you have not already got the new camera stack, you must flash your Pi and install the new OctoPi image.
+The Matta OS OctoPrint plugin uses the <a href="https://octoprint.org/blog/2023/05/24/a-new-camera-stack-for-octopi">new camera stack for OctoPi</a>. If you have not already got the new camera stack, you must flash your Pi and install the new OctoPi image.
 
 <br/>
 <div align="center"><img src="https://matta-os.fra1.cdn.digitaloceanspaces.com/site-assets/octopisetup.gif" width=500 /><p>Installing OctoPi with new camera stack using Raspberry Pi Imager</p></div>
@@ -46,9 +41,23 @@ This plugin is not yet available from the OctoPrint Plugin Repository and as suc
 <br/>
 
 Below are a number of methods for installation:
-
 <details>
-  <summary><b>Install from ZIP in OctoPrint UI</b></summary>
+  <summary><b>From URL in the OctoPrint UI</b></summary>
+    <br/>
+
+Copy the following URL to the latest version of Matta OS's OctoPrint plugin:
+
+```shell
+https://github.com/Matta-Labs/octoprint-mattaos/archive/refs/heads/main.zip
+```
+
+In OctoPrint's plugin manager, select "+ Get More", and paste this URL into the "...From URL" section in the OctoPrint plugin manager inside the input with "Enter URL..".
+
+Click "Install", and restart OctoPrint when prompted.
+
+</details>
+<details>
+  <summary><b>From an uploaded ZIP file in the OctoPrint UI</b></summary>
     <br/>
 
 Download the ZIP package for this repositiory using the green 'Code' dropdown above or the following code.
@@ -94,6 +103,7 @@ sudo reboot
 
 ✨ Thats it! Now the MattaOS plugin should be installed.
 </details>
+
 
 <br/>
 
@@ -199,7 +209,7 @@ At <a href="https://matta.ai"><strong>Matta</strong></a>, we are building AI to 
 
 ## 📞 Contact 
 
-Team Matta - [@mattaai](https://twitter.com/mattaai) - hello@matta.ai
+Team Matta - [@mattalabs](https://twitter.com/mattalabs) - hello@matta.ai
 
 Project Link: [https://github.com/Matta-Labs/octoprint-mattaos](https://github.com/Matta-Labs/octoprint-mattaos)
 

@@ -5,8 +5,8 @@ import sentry_sdk
 import os
 from sys import platform
 
-# MATTA_OS_ENDPOINT = "https://os.matta.ai/"
-MATTA_OS_ENDPOINT = "http://localhost/"
+MATTA_OS_ENDPOINT = "https://os.matta.ai/"
+# MATTA_OS_ENDPOINT = "http://192.168.68.104"
 
 MATTA_TMP_DATA_DIR = os.path.join(os.path.expanduser("~"), ".matta")
 
@@ -138,6 +138,20 @@ def make_timestamp():
     dt = datetime.utcnow().isoformat(sep="T", timespec="milliseconds") + "Z"
     return dt
 
+def before_send(event, hint):
+    if "logentry" in event and "message" in event["logentry"]:
+        list_of_common_errors = [
+            "Handshake status 404 Not Found"
+            "Handshake status 500 Internal Server Error",
+            "Handshake status 502 Bad Gateway",
+            "Handshake status 504 Gateway Timeout",
+            "Connection refused - goodbye",
+            "Temporary failure in name resolution",
+        ]
+        for error in list_of_common_errors:
+            if error in event["logentry"]["message"]:
+                return None
+        return event
 
 def init_sentry(version):
     sentry_sdk.init(
@@ -145,6 +159,7 @@ def init_sentry(version):
         # Set traces_sample_rate to 0.1 to capture 10%
         # of transactions for performance monitoring.
         traces_sample_rate=0.1,
+        before_send=before_send,
         # Set profiles_sample_rate to 0.1 to profile 10%
         # of sampled transactions.
         # We recommend adjusting this value in production.

@@ -195,7 +195,7 @@ class DataEngine:
             )
             resp.raise_for_status()
         except requests.exceptions.RequestException as e:
-            self._logger.error(e)
+            self._logger.info(e)
 
     def finished_upload(self, job_name, gcode_path, csv_path):
         """
@@ -378,7 +378,7 @@ class DataEngine:
                 self.image_upload(resp.content)
                 self.image_count += 1
         except Exception as e:
-            self._logger.error(e)
+            self._logger.info(e)
 
     def data_thread_loop(self):
         """
