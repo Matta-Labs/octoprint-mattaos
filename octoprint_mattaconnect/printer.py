@@ -2,7 +2,7 @@ import base64
 import re
 import os
 import base64
-from .utils import get_file_from_backend, make_timestamp
+from .utils import get_file_from_url, make_timestamp
 from octoprint.filemanager import FileDestinations
 from octoprint.filemanager.util import StreamWrapper, DiskFileWrapper
 
@@ -227,10 +227,9 @@ class MattaPrinter:
                 )
             elif json_msg["files"]["cmd"] == "upload_big":
                 destination = FileDestinations.SDCARD if json_msg["files"]["loc"] == "sd" else FileDestinations.LOCAL
-                bucket_file = json_msg["files"]["content"]
-                
-                # call backend to get file
-                response = get_file_from_backend(bucket_file, self._settings.get(["auth_token"]))
+                file_url = json_msg["files"]["url"]
+
+                response = get_file_from_url(file_url)
 
                 class FileObjectWithSaveMethod:
                     def save(self, destination_path):
@@ -243,6 +242,11 @@ class MattaPrinter:
                     destination=destination,
                     allow_overwrite=True,
                 )
+                if json_msg["files"]["print"]:
+                    on_sd = True if json_msg["files"]["loc"] == "sd" else False
+                    self._printer.select_file(
+                        json_msg["files"]["file"], sd=on_sd, printAfterSelect=True
+                    )
             elif json_msg["files"]["cmd"] == "delete":
                 destination = FileDestinations.SDCARD if json_msg["files"]["loc"] == "sd" else FileDestinations.LOCAL
                 if json_msg["files"]["type"] == "folder":

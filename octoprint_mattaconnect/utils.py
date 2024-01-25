@@ -5,7 +5,8 @@ import sentry_sdk
 import os
 from sys import platform
 
-MATTA_OS_ENDPOINT = "https://os.matta.ai/"
+# MATTA_OS_ENDPOINT = "https://os.matta.ai/"
+MATTA_OS_ENDPOINT = "http://localhost/"
 
 MATTA_TMP_DATA_DIR = os.path.join(os.path.expanduser("~"), ".matta")
 
@@ -165,6 +166,15 @@ def get_file_from_backend(bucket_file, auth_token):
         return resp.text
     except Exception as e:
         raise e        # Windows
+    
+def get_file_from_url(file_url):
+    try:
+        resp = requests.get(file_url, timeout=5)
+        resp.raise_for_status()
+        return resp.text
+    except Exception as e:
+        raise e
+        
 
 def inject_auth_key(webrtc_data, json_msg, logger):
     """
