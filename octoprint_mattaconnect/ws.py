@@ -13,7 +13,7 @@ class Socket:
         try:
             self.socket.run_forever()
         except Exception as e:
-            _logger.debug("ERROR Socket run: %s", e)
+            _logger.info("ERROR Socket run: %s", e)
 
     def send_msg(self, msg):
         try:
@@ -22,8 +22,7 @@ class Socket:
             if self.connected() and self.socket is not None:
                 self.socket.send(msg)
         except Exception as e:
-            _logger.debug("ERROR Socket send_msg: %s", e)
-            pass
+            _logger.info("ERROR Socket send_msg: %s", e)
 
     def connected(self):
         return self.socket and self.socket.sock and self.socket.sock.connected
@@ -41,4 +40,4 @@ class Socket:
             self.socket.close()
             self.socket = None
         except Exception as e:
-            _logger.debug("ERROR Socket disconnect: %s", e)
+            _logger.info("ERROR Socket disconnect: %s", e)

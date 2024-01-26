@@ -6,6 +6,7 @@ import os
 from sys import platform
 
 MATTA_OS_ENDPOINT = "https://os.matta.ai/"
+# MATTA_OS_ENDPOINT = "http://localhost"
 
 MATTA_TMP_DATA_DIR = os.path.join(os.path.expanduser("~"), ".matta")
 
@@ -194,7 +195,7 @@ def inject_auth_key(webrtc_data, json_msg, logger):
     """
     Injects the auth key into the webrtc data.
     """
-    if "auth_key" in json_msg:
+    if webrtc_data and json_msg and "auth_key" in json_msg:
         webrtc_data["webrtc_data"]["auth_key"] = json_msg["auth_key"]
-        logger.debug("MattaConnect plugin - injected auth key into webrtc data.", json_msg["auth_key"])
+        logger.info("MattaConnect plugin - injected auth key into webrtc data: %s", json_msg["auth_key"])
     return webrtc_data

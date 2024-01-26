@@ -24,7 +24,7 @@ class MattaCore:
         self._printer = MattaPrinter(plugin._printer, plugin._logger, plugin._file_manager, settings=plugin._settings)
         self._logger = plugin._logger
         self._file_manager = plugin._file_manager
-        self._logger.debug("Starting MattaConnect Plugin...")
+        self._logger.info("Starting MattaConnect Plugin...")
         self.nozzle_camera_count = 0
         self.ws = None
         self.ws_loop_time = 5
@@ -41,11 +41,11 @@ class MattaCore:
 
     def start_websocket_thread(self):
         """Starts the main WS thread."""
-        self._logger.debug("Setting up main WS thread...")
+        self._logger.info("Setting up main WS thread...")
         ws_data_thread = threading.Thread(target=self.websocket_thread_loop)
         ws_data_thread.daemon = True
         ws_data_thread.start()
-        self._logger.debug("Main WS thread running.")
+        self._logger.info("Main WS thread running.")
 
     def update_ws_send_interval(self):
         """
@@ -81,7 +81,7 @@ class MattaCore:
         Args:
             wait (bool): Indicates whether to wait for a few seconds after connecting.
         """
-        self._logger.debug("Connecting websocket")
+        self._logger.info("Connecting websocket")
         try:
             full_url = get_cloud_websocket_url() + "api/v1/ws/printer"
             if self.ws_connected():
@@ -101,8 +101,7 @@ class MattaCore:
             if wait:
                 time.sleep(2) # wait for 2 seconds
         except Exception as e:
-            self._logger.debug("ws_on_close: %s", e)
-            pass
+            self._logger.info("ws_on_close: %s", e)
 
     def ws_on_message(self, msg):
         """
@@ -113,42 +112,54 @@ class MattaCore:
             msg (str): The received message.
 
         """
-        json_msg = json.loads(msg)
-        self._logger.debug("ws_on_message: %s", json_msg)
-        if (
-            json_msg["token"] == self._settings.get(["auth_token"])
-            and json_msg["interface"] == "client"
-        ):
-            if json_msg.get("state", None) == "online":
-                self.user_online = True
-                msg = self.ws_data()
-            elif json_msg.get("state", None) == "offline":
-                self.user_online = False
-                msg = self.ws_data()
-            elif json_msg.get("webrtc", None) == "request":
-                # check if auth_key has already been received
-                webrtc_auth_key = json_msg.get("auth_key", None)
-                last_webrtc_auth_key = self._settings.get(["webrtc_auth_key"])
-                if webrtc_auth_key is not None and webrtc_auth_key != last_webrtc_auth_key:
-                    # save auth_key
-                    self._settings.set(["webrtc_auth_key"], webrtc_auth_key, force=True)
-                    self._settings.save()
-                    webrtc_data = self.request_webrtc_stream()
-                    webrtc_data = inject_auth_key(webrtc_data, json_msg, self._logger)
-                    msg = self.ws_data(extra_data=webrtc_data)
-            elif json_msg.get("webrtc", None) == "remote_candidate":
-                webrtc_data = self.remote_webrtc_stream(candidate=json_msg["data"])
-                webrtc_data = inject_auth_key(webrtc_data, json_msg, self._logger)
-                msg = self.ws_data(extra_data=webrtc_data)
-            elif json_msg.get("webrtc", None) == "offer":
-                webrtc_data = self.connect_webrtc_stream(offer=json_msg["data"])
-                webrtc_data = inject_auth_key(webrtc_data, json_msg, self._logger)
-                msg = self.ws_data(extra_data=webrtc_data)
-            else:
-                self._printer.handle_cmds(json_msg)
-                msg = self.ws_data()
-        self.ws_send(msg)
-        self.update_ws_send_interval()
+        try:
+            json_msg = json.loads(msg)
+            self._logger.info("ws_on_message: %s", json_msg)
+            if (
+                json_msg["token"] == self._settings.get(["auth_token"])
+                and json_msg["interface"] == "client"
+            ):
+                if json_msg.get("state", None) == "online":
+                    self.user_online = True
+                    msg = self.ws_data()
+                elif json_msg.get("state", None) == "offline":
+                    self.user_online = False
+                    msg = self.ws_data()
+                elif json_msg.get("webrtc", None) == "request":
+                    # check if auth_key has already been received
+                    webrtc_auth_key = json_msg.get("auth_key", None)
+                    last_webrtc_auth_key = self._settings.get(["webrtc_auth_key"])
+                    if webrtc_auth_key is not None and webrtc_auth_key != last_webrtc_auth_key:
+                        # save auth_key
+                        self._settings.set(["webrtc_auth_key"], webrtc_auth_key, force=True)
+                        self._settings.save()
+                        webrtc_data = self.request_webrtc_stream() # this can be None or {"webrtc_data": resp.json()}
+                        if webrtc_data is not None:
+                            webrtc_data = inject_auth_key(webrtc_data, json_msg, self._logger)
+                            msg = self.ws_data(extra_data=webrtc_data)
+                        else:
+                            msg = self.ws_data()
+                elif json_msg.get("webrtc", None) == "remote_candidate":
+                    webrtc_data = self.remote_webrtc_stream(candidate=json_msg["data"]) # this can be None or {"webrtc_data": resp.json()}
+                    if webrtc_data is not None:
+                        webrtc_data = inject_auth_key(webrtc_data, json_msg, self._logger)
+                        msg = self.ws_data(extra_data=webrtc_data)
+                    else:
+                        msg = self.ws_data()
+                elif json_msg.get("webrtc", None) == "offer":
+                    webrtc_data = self.connect_webrtc_stream(offer=json_msg["data"]) # this can be None or {"webrtc_data": resp.json()}
+                    if webrtc_data is not None:
+                        webrtc_data = inject_auth_key(webrtc_data, json_msg, self._logger)
+                        msg = self.ws_data(extra_data=webrtc_data)
+                    else:
+                        msg = self.ws_data()
+                else:
+                    self._printer.handle_cmds(json_msg)
+                    msg = self.ws_data()
+            self.ws_send(msg)
+            self.update_ws_send_interval()
+        except Exception as e:
+            self._logger.info("ws_on_message: %s", e)
     
     def ws_send(self, msg):
         """
@@ -162,7 +173,7 @@ class MattaCore:
             if self.ws_connected():
                 self.ws.send_msg(msg)
         except Exception as e:
-            self._logger.debug("ws_send: %s", e)
+            self._logger.info("ws_send: %s", e)
         
 
     def ws_data(self, extra_data=None):
@@ -176,33 +187,37 @@ class MattaCore:
             dict: The data payload.
 
         """
-        data = {
-            "type": "printer_packet",
-            "token": self._settings.get(["auth_token"]),
-            "timestamp": make_timestamp(),
-            "files": self._file_manager.list_files(recursive=True),
-            "terminal_cmds": self.terminal_cmds,
-            "system": {
-                "version": self.octoprint_version,
-                "os": self.os,
-                "memory": get_current_memory_usage(self.os),
-            },
-            "nozzle_tip_coords": {
-                "nozzle_tip_coords_x": int(self._settings.get(["nozzle_tip_coords_x"])),
-                "nozzle_tip_coords_y": int(self._settings.get(["nozzle_tip_coords_y"])),
-            },
-            "webcam_transforms": {
-                "flip_h": self._settings.get(["flip_h"]),
-                "flip_v": self._settings.get(["flip_v"]),
-                "rotate": self._settings.get(["rotate"]),
-            },
-        }
-        if self._printer.connected():
-            printer_data = self._printer.get_data()
-            data.update(printer_data)
-        if extra_data:
-            data.update(extra_data)
-        return data
+        try:
+            data = {
+                "type": "printer_packet",
+                "token": self._settings.get(["auth_token"]),
+                "timestamp": make_timestamp(),
+                "files": self._file_manager.list_files(recursive=True),
+                "terminal_cmds": self.terminal_cmds,
+                "system": {
+                    "version": self.octoprint_version,
+                    "os": self.os,
+                    "memory": get_current_memory_usage(self.os),
+                },
+                "nozzle_tip_coords": {
+                    "nozzle_tip_coords_x": int(self._settings.get(["nozzle_tip_coords_x"])),
+                    "nozzle_tip_coords_y": int(self._settings.get(["nozzle_tip_coords_y"])),
+                },
+                "webcam_transforms": {
+                    "flip_h": self._settings.get(["flip_h"]),
+                    "flip_v": self._settings.get(["flip_v"]),
+                    "rotate": self._settings.get(["rotate"]),
+                },
+            }
+            if self._printer.connected():
+                printer_data = self._printer.get_data()
+                data.update(printer_data)
+            if extra_data:
+                data.update(extra_data)
+            return data
+        except Exception as e:
+            self._logger.info("ws_data: %s", e)
+            return {}
 
     def test_auth_token(self, token):
         """
@@ -271,7 +286,7 @@ class MattaCore:
         try:
             resp = requests.get(self._settings.get(["snapshot_url"]), stream=True)  # Add a timeout
         except requests.exceptions.RequestException as e:
-            self._logger.debug("Error when sending request: %s", e)
+            self._logger.info("Error when sending request: %s", e)
             status_text = "Error when sending request: " + str(e)
             return success, status_text, image
         if resp.status_code == 200:
@@ -306,7 +321,7 @@ class MattaCore:
                     time.sleep(0.1)  # slow things down to 100ms
                     self.update_ws_send_interval()
             except Exception as e:
-                self._logger.debug("ERROR websocket_thread_loop: %s", e)
+                self._logger.info("ERROR websocket_thread_loop: %s", e)
                 if self.ws_connected():
                     self.ws.disconnect()
                     self.ws = None
@@ -316,7 +331,7 @@ class MattaCore:
                         self.ws.disconnect()
                         self.ws = None
                 except Exception as e:
-                    self._logger.debug("ERROR ws_send_data: %s", e)
+                    self._logger.info("ERROR ws_send_data: %s", e)
             time.sleep(0.1)  # slow things down to 100ms
 
     def request_webrtc_stream(self):
@@ -343,10 +358,10 @@ class MattaCore:
             if resp.status_code == 200:
                 return {"webrtc_data": resp.json()}
         except requests.exceptions.RequestException as e:
-            self._logger.debug("ERROR RequestException: ", e)
+            self._logger.info("ERROR RequestException: ", e)
         except Exception as e:
-            self._logger.debug("ERROR: ", e)
-        return None
+            self._logger.info("ERROR: ", e)
+        return {"webrtc_error": "WebRTC request failed. Couldn't connect to the camera streamer."}
 
     def remote_webrtc_stream(self, candidate):
         """
@@ -373,10 +388,10 @@ class MattaCore:
             if resp.status_code == 200:
                 return {"webrtc_data": resp.json()}
         except requests.exceptions.RequestException as e:
-            self._logger.debug("ERROR RequestException: ", e)
+            self._logger.info("ERROR RequestException: ", e)
         except Exception as e:
-            self._logger.debug("ERROR: ", e)
-        return None
+            self._logger.info("ERROR: ", e)
+        return {"webrtc_error": "WebRTC remote handshake failed. Couldn't connect to the camera streamer."}
 
     def connect_webrtc_stream(self, offer):
         """
@@ -403,7 +418,7 @@ class MattaCore:
             if resp.status_code == 200:
                 return {"webrtc_data": resp.json()}
         except requests.exceptions.RequestException as e:
-            self._logger.debug("ERROR RequestException: ", e)
+            self._logger.info("ERROR RequestException: ", e)
         except Exception as e:
-            self._logger.debug("ERROR: ", e)
-        return None
+            self._logger.info("ERROR: ", e)
+        return {"webrtc_error": "WebRTC connection completion failed. Couldn't connect to the camera streamer."}
