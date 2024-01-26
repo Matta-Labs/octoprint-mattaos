@@ -103,7 +103,7 @@ class MattaCore:
         except Exception as e:
             self._logger.info("ws_on_close: %s", e)
 
-    def ws_on_message(self, msg):
+    def ws_on_message(self, incoming_msg):
         """
         Callback function called when a message is received over the WebSocket connection.
 
@@ -113,8 +113,9 @@ class MattaCore:
 
         """
         try:
-            json_msg = json.loads(msg)
+            json_msg = json.loads(incoming_msg)
             self._logger.info("ws_on_message: %s", json_msg)
+            msg = self.ws_data() # default message
             if (
                 json_msg["token"] == self._settings.get(["auth_token"])
                 and json_msg["interface"] == "client"
