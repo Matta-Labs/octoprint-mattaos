@@ -275,7 +275,6 @@ class MattaPrinter:
                         file_content,
                         self._settings.get(["auth_token"]),
                     )
-                    self._logger.info(response)
         elif "gcode" in json_msg:
             if json_msg["gcode"]["cmd"] == "send":
                 self._printer.commands(commands=json_msg["gcode"]["lines"])

@@ -166,7 +166,7 @@ def init_sentry(version):
         # of sampled transactions.
         # We recommend adjusting this value in production.
         profiles_sample_rate=0.1,
-        release=f"MattaOSLite@{version}",
+        release=f"octoprint-mattaos@{version}",
     )
 
 

@@ -14,6 +14,7 @@ class Socket:
             self.socket.run_forever()
         except Exception as e:
             _logger.info("ERROR Socket run: %s", e)
+            self.disconnect()
 
     def send_msg(self, msg):
         try:
@@ -23,6 +24,7 @@ class Socket:
                 self.socket.send(msg)
         except Exception as e:
             _logger.info("ERROR Socket send_msg: %s", e)
+            self.disconnect()
 
     def connected(self):
         return self.socket and self.socket.sock and self.socket.sock.connected
