@@ -21,7 +21,12 @@ import requests
 class MattaCore:
     def __init__(self, plugin, csv_capture=True, image_capture=True):
         self._settings = plugin._settings
-        self._printer = MattaPrinter(plugin._printer, plugin._logger, plugin._file_manager, settings=plugin._settings)
+        self._printer = MattaPrinter(
+            plugin._printer,
+            plugin._logger,
+            plugin._file_manager,
+            settings=plugin._settings,
+        )
         self._logger = plugin._logger
         self._file_manager = plugin._file_manager
         self._logger.info("Starting MattaConnect Plugin...")
@@ -53,7 +58,7 @@ class MattaCore:
         """
         if self.user_online and self._printer.has_job():
             # When the user is online and printer is printing
-            self.ws_loop_time = 1.25 # 1250ms websocket send interval
+            self.ws_loop_time = 1.25  # 1250ms websocket send interval
         elif self.user_online:
             # When the user is online
             self.ws_loop_time = 1.25  # 1250ms websocket send interval
@@ -99,7 +104,7 @@ class MattaCore:
             self.ws_thread.daemon = True
             self.ws_thread.start()
             if wait:
-                time.sleep(2) # wait for 2 seconds
+                time.sleep(2)  # wait for 2 seconds
         except Exception as e:
             self._logger.info("ws_on_close: %s", e)
 
@@ -115,7 +120,7 @@ class MattaCore:
         try:
             json_msg = json.loads(incoming_msg)
             self._logger.info("ws_on_message: %s", json_msg)
-            msg = self.ws_data() # default message
+            msg = self.ws_data()  # default message
             if (
                 json_msg["token"] == self._settings.get(["auth_token"])
                 and json_msg["interface"] == "client"
@@ -130,27 +135,44 @@ class MattaCore:
                     # check if auth_key has already been received
                     webrtc_auth_key = json_msg.get("auth_key", None)
                     last_webrtc_auth_key = self._settings.get(["webrtc_auth_key"])
-                    if webrtc_auth_key is not None and webrtc_auth_key != last_webrtc_auth_key:
+                    if (
+                        webrtc_auth_key is not None
+                        and webrtc_auth_key != last_webrtc_auth_key
+                    ):
                         # save auth_key
-                        self._settings.set(["webrtc_auth_key"], webrtc_auth_key, force=True)
+                        self._settings.set(
+                            ["webrtc_auth_key"], webrtc_auth_key, force=True
+                        )
                         self._settings.save()
-                        webrtc_data = self.request_webrtc_stream() # this can be None or {"webrtc_data": resp.json()}
+                        webrtc_data = (
+                            self.request_webrtc_stream()
+                        )  # this can be None or {"webrtc_data": resp.json()}
                         if webrtc_data is not None:
-                            webrtc_data = inject_auth_key(webrtc_data, json_msg, self._logger)
+                            webrtc_data = inject_auth_key(
+                                webrtc_data, json_msg, self._logger
+                            )
                             msg = self.ws_data(extra_data=webrtc_data)
                         else:
                             msg = self.ws_data()
                 elif json_msg.get("webrtc", None) == "remote_candidate":
-                    webrtc_data = self.remote_webrtc_stream(candidate=json_msg["data"]) # this can be None or {"webrtc_data": resp.json()}
+                    webrtc_data = self.remote_webrtc_stream(
+                        candidate=json_msg["data"]
+                    )  # this can be None or {"webrtc_data": resp.json()}
                     if webrtc_data is not None:
-                        webrtc_data = inject_auth_key(webrtc_data, json_msg, self._logger)
+                        webrtc_data = inject_auth_key(
+                            webrtc_data, json_msg, self._logger
+                        )
                         msg = self.ws_data(extra_data=webrtc_data)
                     else:
                         msg = self.ws_data()
                 elif json_msg.get("webrtc", None) == "offer":
-                    webrtc_data = self.connect_webrtc_stream(offer=json_msg["data"]) # this can be None or {"webrtc_data": resp.json()}
+                    webrtc_data = self.connect_webrtc_stream(
+                        offer=json_msg["data"]
+                    )  # this can be None or {"webrtc_data": resp.json()}
                     if webrtc_data is not None:
-                        webrtc_data = inject_auth_key(webrtc_data, json_msg, self._logger)
+                        webrtc_data = inject_auth_key(
+                            webrtc_data, json_msg, self._logger
+                        )
                         msg = self.ws_data(extra_data=webrtc_data)
                     else:
                         msg = self.ws_data()
@@ -161,7 +183,7 @@ class MattaCore:
             self.update_ws_send_interval()
         except Exception as e:
             self._logger.info("ws_on_message: %s", e)
-    
+
     def ws_send(self, msg):
         """
         Sends a message over the WebSocket connection.
@@ -175,7 +197,6 @@ class MattaCore:
                 self.ws.send_msg(msg)
         except Exception as e:
             self._logger.info("ws_send: %s", e)
-        
 
     def ws_data(self, extra_data=None):
         """
@@ -201,8 +222,12 @@ class MattaCore:
                     "memory": get_current_memory_usage(self.os),
                 },
                 "nozzle_tip_coords": {
-                    "nozzle_tip_coords_x": int(self._settings.get(["nozzle_tip_coords_x"])),
-                    "nozzle_tip_coords_y": int(self._settings.get(["nozzle_tip_coords_y"])),
+                    "nozzle_tip_coords_x": int(
+                        self._settings.get(["nozzle_tip_coords_x"])
+                    ),
+                    "nozzle_tip_coords_y": int(
+                        self._settings.get(["nozzle_tip_coords_y"])
+                    ),
                 },
                 "webcam_transforms": {
                     "flip_h": self._settings.get(["flip_h"]),
@@ -265,7 +290,7 @@ class MattaCore:
             )
             status_text = "Error. Please check OctoPrint's internet connection"
         return success, status_text
-    
+
     def take_snapshot(self, url):
         """
         Takes a snapshot of the current print job.
@@ -285,7 +310,9 @@ class MattaCore:
         self._settings.set(["snapshot_url"], url.strip(), force=True)
         self._settings.save()
         try:
-            resp = requests.get(self._settings.get(["snapshot_url"]), stream=True)  # Add a timeout
+            resp = requests.get(
+                self._settings.get(["snapshot_url"]), stream=True
+            )  # Add a timeout
         except requests.exceptions.RequestException as e:
             self._logger.info("Error when sending request: %s", e)
             status_text = "Error when sending request: " + str(e)
@@ -354,7 +381,10 @@ class MattaCore:
         headers = {"Content-Type": "application/json"}
         try:
             resp = requests.post(
-                self._settings.get(["webrtc_url"]), json=params, headers=headers, timeout=5,
+                self._settings.get(["webrtc_url"]),
+                json=params,
+                headers=headers,
+                timeout=5,
             )
             if resp.status_code == 200:
                 return {"webrtc_data": resp.json()}
@@ -362,7 +392,9 @@ class MattaCore:
             self._logger.info("ERROR RequestException: ", e)
         except Exception as e:
             self._logger.info("ERROR: ", e)
-        return {"webrtc_error": "WebRTC request failed. Couldn't connect to the camera streamer."}
+        return {
+            "webrtc_error": "WebRTC request failed. Couldn't connect to the camera streamer."
+        }
 
     def remote_webrtc_stream(self, candidate):
         """
@@ -384,7 +416,10 @@ class MattaCore:
         headers = {"Content-Type": "application/json"}
         try:
             resp = requests.post(
-                self._settings.get(["webrtc_url"]), json=params, headers=headers, timeout=5,
+                self._settings.get(["webrtc_url"]),
+                json=params,
+                headers=headers,
+                timeout=5,
             )
             if resp.status_code == 200:
                 return {"webrtc_data": resp.json()}
@@ -392,7 +427,9 @@ class MattaCore:
             self._logger.info("ERROR RequestException: ", e)
         except Exception as e:
             self._logger.info("ERROR: ", e)
-        return {"webrtc_error": "WebRTC remote handshake failed. Couldn't connect to the camera streamer."}
+        return {
+            "webrtc_error": "WebRTC remote handshake failed. Couldn't connect to the camera streamer."
+        }
 
     def connect_webrtc_stream(self, offer):
         """
@@ -414,7 +451,10 @@ class MattaCore:
         headers = {"Content-Type": "application/json"}
         try:
             resp = requests.post(
-                self._settings.get(["webrtc_url"]), json=params, headers=headers, timeout=5,
+                self._settings.get(["webrtc_url"]),
+                json=params,
+                headers=headers,
+                timeout=5,
             )
             if resp.status_code == 200:
                 return {"webrtc_data": resp.json()}
@@ -422,4 +462,6 @@ class MattaCore:
             self._logger.info("ERROR RequestException: ", e)
         except Exception as e:
             self._logger.info("ERROR: ", e)
-        return {"webrtc_error": "WebRTC connection completion failed. Couldn't connect to the camera streamer."}
+        return {
+            "webrtc_error": "WebRTC connection completion failed. Couldn't connect to the camera streamer."
+        }

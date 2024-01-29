@@ -1,9 +1,8 @@
-import base64
 import re
 import os
-from .utils import get_file_from_url, make_timestamp
+from .utils import get_file_from_url, make_timestamp, post_file_to_backend_for_download
 from octoprint.filemanager import FileDestinations
-from octoprint.filemanager.util import StreamWrapper, DiskFileWrapper
+
 
 class MattaPrinter:
     """Virtual Printer class for storing current parameters"""
@@ -209,30 +208,18 @@ class MattaPrinter:
                     json_msg["files"]["file"], sd=on_sd, printAfterSelect=False
                 )
             elif json_msg["files"]["cmd"] == "upload":
-                destination = FileDestinations.SDCARD if json_msg["files"]["loc"] == "sd" else FileDestinations.LOCAL
-                file_content = base64.b64decode(json_msg["files"]["content"])
-                content_string = file_content.decode("utf-8")
-
-                class FileObjectWithSaveMethod:
-                    def save(self, destination_path):
-                        with open(destination_path, 'w') as file:
-                            file.write(str(content_string))
-
-                self._file_manager.add_file(
-                    path=json_msg["files"]["file"],
-                    file_object=FileObjectWithSaveMethod(),
-                    destination=destination,
-                    allow_overwrite=True,
+                destination = (
+                    FileDestinations.SDCARD
+                    if json_msg["files"]["loc"] == "sd"
+                    else FileDestinations.LOCAL
                 )
-            elif json_msg["files"]["cmd"] == "upload_big":
-                destination = FileDestinations.SDCARD if json_msg["files"]["loc"] == "sd" else FileDestinations.LOCAL
                 file_url = json_msg["files"]["url"]
 
                 response = get_file_from_url(file_url)
 
                 class FileObjectWithSaveMethod:
                     def save(self, destination_path):
-                        with open(destination_path, 'w') as file:
+                        with open(destination_path, "w") as file:
                             file.write(response)
 
                 self._file_manager.add_file(
@@ -247,19 +234,48 @@ class MattaPrinter:
                         json_msg["files"]["file"], sd=on_sd, printAfterSelect=True
                     )
             elif json_msg["files"]["cmd"] == "delete":
-                destination = FileDestinations.SDCARD if json_msg["files"]["loc"] == "sd" else FileDestinations.LOCAL
+                destination = (
+                    FileDestinations.SDCARD
+                    if json_msg["files"]["loc"] == "sd"
+                    else FileDestinations.LOCAL
+                )
                 if json_msg["files"]["type"] == "folder":
-                    self._file_manager.remove_folder(path=json_msg["files"]["file"], destination=destination)
-                else: 
-                    self._file_manager.remove_file(path=json_msg["files"]["file"], destination=destination)
+                    self._file_manager.remove_folder(
+                        path=json_msg["files"]["file"], destination=destination
+                    )
+                else:
+                    self._file_manager.remove_file(
+                        path=json_msg["files"]["file"], destination=destination
+                    )
             elif json_msg["files"]["cmd"] == "new_folder":
-                destination = FileDestinations.SDCARD if json_msg["files"]["loc"] == "sd" else FileDestinations.LOCAL
+                destination = (
+                    FileDestinations.SDCARD
+                    if json_msg["files"]["loc"] == "sd"
+                    else FileDestinations.LOCAL
+                )
                 self._file_manager.add_folder(
                     path=json_msg["files"]["folder"],
                     destination=destination,
                     ignore_existing=True,
                     display=None,
                 )
+            elif json_msg["files"]["cmd"] == "download":
+                destination = (
+                    FileDestinations.SDCARD
+                    if json_msg["files"]["loc"] == "sd"
+                    else FileDestinations.LOCAL
+                )
+                full_path = self._file_manager.path_on_disk(
+                    destination, json_msg["files"]["file"]
+                )
+                with open(full_path, "r") as file:
+                    file_content = file.read()
+                    response = post_file_to_backend_for_download(
+                        os.path.basename(full_path),
+                        file_content,
+                        self._settings.get(["auth_token"]),
+                    )
+                    self._logger.info(response)
         elif "gcode" in json_msg:
             if json_msg["gcode"]["cmd"] == "send":
                 self._printer.commands(commands=json_msg["gcode"]["lines"])

@@ -129,7 +129,7 @@ def get_gcode_upload_dir():
         path = "~/Library/Application Support/OctoPrint/uploads"
     elif platform == "win32" or platform == "win64":
         # Windows
-        path = os.path.join(os.getenv('APPDATA'), 'OctoPrint', 'uploads')
+        path = os.path.join(os.getenv("APPDATA"), "OctoPrint", "uploads")
     return os.path.expanduser(path)
 
 
@@ -137,6 +137,7 @@ def make_timestamp():
     """Generates a timestamp string in the format 'YYYY-MM-DDTHH:MM:SS.sssZ'"""
     dt = datetime.utcnow().isoformat(sep="T", timespec="milliseconds") + "Z"
     return dt
+
 
 def before_send(event, hint):
     if "logentry" in event and "message" in event["logentry"]:
@@ -153,6 +154,7 @@ def before_send(event, hint):
                 return None
         return event
 
+
 def init_sentry(version):
     sentry_sdk.init(
         dsn="https://687d2f7c85af84f983b3d9980468c24c@o289703.ingest.sentry.io/4506337826570240",
@@ -166,7 +168,8 @@ def init_sentry(version):
         profiles_sample_rate=0.1,
         release=f"MattaOSLite@{version}",
     )
-    
+
+
 def get_file_from_backend(bucket_file, auth_token):
     """Gets a file from the backend"""
     full_url = get_api_url() + "print-jobs/printer/gcode/uploadfile"
@@ -174,22 +177,61 @@ def get_file_from_backend(bucket_file, auth_token):
     data = {"bucket_file": bucket_file}
     try:
         resp = requests.post(
-            url=full_url, data=data, headers=headers, timeout=5,
+            url=full_url,
+            data=data,
+            headers=headers,
+            timeout=5,
         )
         # print data from resp
         resp.raise_for_status()
         return resp.text
     except Exception as e:
-        raise e        # Windows
-    
+        raise e  # Windows
+
+
 def get_file_from_url(file_url):
+    """
+    Downloads file from URL and returns the file content as a string.
+
+    Args:
+        file_url (str): The URL to download the file from.
+    """
     try:
         resp = requests.get(file_url, timeout=5)
         resp.raise_for_status()
         return resp.text
     except Exception as e:
         raise e
-        
+
+
+def post_file_to_backend_for_download(file_name, file_content, auth_token):
+    """Posts a file to the backend"""
+    full_url = get_api_url() + "printers/upload-from-edge/download-request"
+    headers = generate_auth_headers(auth_token)
+    # get the content type given file name extension (gcode, stl, etc.)
+    content_type = "text/plain"
+    if (
+        file_name.lower().endswith(".stl")
+        or file_name.lower().endswith(".obj")
+        or file_name.lower().endswith(".3mf")
+    ):
+        content_type = "application/octet-stream"
+    files = {
+        "file": (file_name, file_content, content_type),
+    }
+    try:
+        resp = requests.post(
+            url=full_url,
+            files=files,
+            headers=headers,
+            timeout=5,
+        )
+        # print data from resp
+        resp.raise_for_status()
+        return resp.json()
+    except Exception as e:
+        raise e
+
 
 def inject_auth_key(webrtc_data, json_msg, logger):
     """
@@ -197,5 +239,8 @@ def inject_auth_key(webrtc_data, json_msg, logger):
     """
     if webrtc_data and json_msg and "auth_key" in json_msg:
         webrtc_data["webrtc_data"]["auth_key"] = json_msg["auth_key"]
-        logger.info("MattaConnect plugin - injected auth key into webrtc data: %s", json_msg["auth_key"])
+        logger.info(
+            "MattaConnect plugin - injected auth key into webrtc data: %s",
+            json_msg["auth_key"],
+        )
     return webrtc_data
