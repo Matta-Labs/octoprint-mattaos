@@ -2,6 +2,7 @@
 import flask
 import base64
 import octoprint.plugin
+import signal
 from .utils import init_sentry
 
 from .matta import MattaCore

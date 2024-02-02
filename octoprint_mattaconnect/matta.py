@@ -1,6 +1,7 @@
 import time
 import json
 import threading
+import signal
 from octoprint.util.platform import get_os
 from octoprint.util.version import get_octoprint_version_string
 
@@ -29,6 +30,7 @@ class MattaCore:
         )
         self._logger = plugin._logger
         self._file_manager = plugin._file_manager
+        self._attempt_reconnect = False
         self._logger.info("Starting MattaConnect Plugin...")
         self.nozzle_camera_count = 0
         self.ws = None
@@ -41,6 +43,10 @@ class MattaCore:
 
         self.user_online = False
         self.start_websocket_thread()
+
+        # Set up signal handlers
+        signal.signal(signal.SIGTERM, self.handle_shutdown)
+        signal.signal(signal.SIGINT, self.handle_shutdown)
 
         self.data_engine = DataEngine(self._printer, self._settings, self._logger)
 
@@ -66,6 +72,13 @@ class MattaCore:
             # When the user is offline
             self.ws_loop_time = 30  # 30s websocket send interval
 
+    def handle_shutdown(self, signum, frame):
+        if self.ws_connected():
+            self.ws.disconnect()
+            self.ws = None
+        self._logger.info("MattaConnect Plugin shutting down...")
+        exit(0)
+
     def ws_connected(self):
         """
         Checks if the WebSocket connection is currently connected.
@@ -86,6 +99,10 @@ class MattaCore:
         Args:
             wait (bool): Indicates whether to wait for a few seconds after connecting.
         """
+        if self.ws_connected():  # Check if already connected
+            self._logger.info("WebSocket already connected.")
+            return
+        
         self._logger.info("Connecting websocket")
         try:
             full_url = get_cloud_websocket_url() + "api/v1/ws/printer"
@@ -389,9 +406,9 @@ class MattaCore:
             if resp.status_code == 200:
                 return {"webrtc_data": resp.json()}
         except requests.exceptions.RequestException as e:
-            self._logger.info("ERROR RequestException: ", e)
+            self._logger.info("ERROR RequestException: %s", e)
         except Exception as e:
-            self._logger.info("ERROR: ", e)
+            self._logger.info("ERROR: %s", e)
         return {
             "webrtc_error": "WebRTC request failed. Couldn't connect to the camera streamer."
         }
@@ -424,9 +441,9 @@ class MattaCore:
             if resp.status_code == 200:
                 return {"webrtc_data": resp.json()}
         except requests.exceptions.RequestException as e:
-            self._logger.info("ERROR RequestException: ", e)
+            self._logger.info("ERROR RequestException: %s", e)
         except Exception as e:
-            self._logger.info("ERROR: ", e)
+            self._logger.info("ERROR: %s", e)
         return {
             "webrtc_error": "WebRTC remote handshake failed. Couldn't connect to the camera streamer."
         }
@@ -459,9 +476,9 @@ class MattaCore:
             if resp.status_code == 200:
                 return {"webrtc_data": resp.json()}
         except requests.exceptions.RequestException as e:
-            self._logger.info("ERROR RequestException: ", e)
+            self._logger.info("ERROR RequestException: %s", e)
         except Exception as e:
-            self._logger.info("ERROR: ", e)
+            self._logger.info("ERROR: %s", e)
         return {
             "webrtc_error": "WebRTC connection completion failed. Couldn't connect to the camera streamer."
         }
