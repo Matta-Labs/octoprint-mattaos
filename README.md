@@ -163,7 +163,7 @@ In settings there are a few variables which need to be configured for use:
 
 This is the streaming URL of your nozzle-cam streamer. The plugin only supports WebRTC streams, which require OctoPrint 1.8.0 and above, with the new camera stack.
 
-This will be ```http://<the hostname (or IP) of your Raspberry Pi>/webcam/webrtc```. Replace localhost with the hostname (or IP).
+This will be ```http://localhost/webcam/webrtc```.
 
 <br/>
 
@@ -174,7 +174,7 @@ This will be ```http://<the hostname (or IP) of your Raspberry Pi>/webcam/webrtc
 
 This is the snapshot URL of your nozzle-cam streamer. The plugin only supports WebRTC streams, which require OctoPrint 1.8.0 and above, with the new camera stack.
 
-This will be ```http://<the hostname (or IP) of your Raspberry Pi>/webcam/?action=snapshot```
+This will be ```http://localhost/webcam/?action=snapshot```
 
 1. Paste in the streamer snapshot URL.
 2. Click snap to test the connection.
