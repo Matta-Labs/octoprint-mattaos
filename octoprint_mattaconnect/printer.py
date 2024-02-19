@@ -196,6 +196,8 @@ class MattaPrinter:
                 self._printer.cancel_print()
             elif json_msg["execute"]["cmd"] == "toggle":
                 self._printer.toggle_pause_print()
+            elif json_msg["execute"]["cmd"] == "connect":
+                self._printer.connect()
         elif "files" in json_msg:
             if json_msg["files"]["cmd"] == "print":
                 on_sd = True if json_msg["files"]["loc"] == "sd" else False

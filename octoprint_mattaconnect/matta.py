@@ -234,6 +234,7 @@ class MattaCore:
                 "files": self._file_manager.list_files(recursive=True),
                 "terminal_cmds": self.terminal_cmds,
                 "system": {
+                    "software": "octoprint",
                     "version": self.octoprint_version,
                     "os": self.os,
                     "memory": get_current_memory_usage(self.os),
