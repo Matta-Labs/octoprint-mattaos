@@ -139,8 +139,8 @@ class MattaCore:
             self._logger.info("ws_on_message: %s", json_msg)
             msg = self.ws_data()  # default message
             if (
-                json_msg["token"] == self._settings.get(["auth_token"])
-                and json_msg["interface"] == "client"
+                json_msg.get("token", None) == self._settings.get(["auth_token"])
+                and json_msg.get("interface", None) == "client"
             ):
                 if json_msg.get("state", None) == "online":
                     self.user_online = True

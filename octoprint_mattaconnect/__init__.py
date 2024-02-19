@@ -53,15 +53,15 @@ class MattaconnectPlugin(
         # for details.
         return {
             "mattaconnect": {
-                "displayName": "Mattaconnect Plugin",
+                "displayName": "MattaOS Plugin",
                 "displayVersion": self._plugin_version,
                 # version check: github repository
                 "type": "github_release",
                 "user": "Matta-Labs",
-                "repo": "octoprint-mattaconnect",
+                "repo": "octoprint-mattaos",
                 "current": self._plugin_version,
                 # update method: pip
-                "pip": "https://github.com/Matta-Labs/octoprint-mattaconnect/archive/{target_version}.zip",
+                "pip": "https://github.com/Matta-Labs/octoprint-mattaos/archive/{target_version}.zip",
             }
         }
 
