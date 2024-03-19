@@ -1,5 +1,5 @@
 <p align="center"><img src="https://uploads-ssl.webflow.com/63fa465ee0545971ce735482/64883f3b58342c1b87033b6d_Emblem_Black.svg" alt="Matta Logo" style="width:50px" /></p>
-<h1 align="center" style="margin-bottom:20px"><a href="https://matta.ai">MattaOS</a></h1>
+<h1 align="center" style="margin-bottom:20px"><a href="https://matta.ai">MattaOS</a> for OctoPrint</h1>
 <img src="https://matta-os.fra1.cdn.digitaloceanspaces.com/site-assets/email_assets/VideoGridCover.png" />
 <p>Connect your OctoPrint-connected printers to <a href="https://os.matta.ai">MattaOS</a>, for remote control, AI-powered error detection, fleet management, and more!</p>
 
@@ -24,7 +24,7 @@ Matta is working towards building full AI-powered closed-loop control of 3D prin
 
 ## 🐙 OctoPrint Camera Stack Installation
 
-OctoPrint-MattaOS is a plugin for OctoPrint, the snappy web interface for your 3D printer. If you have not setup OctoPrint, get started <a href="https://octoprint.org" > here.</a>
+OctoPrint-MattaOS is a plugin for <a href="https://github.com/OctoPrint/OctoPrint">OctoPrint</a>, the snappy web interface for your 3D printer. If you have not setup OctoPrint, get started <a href="https://octoprint.org" > here.</a>
 
 The Matta OS OctoPrint plugin uses the <a href="https://octoprint.org/blog/2023/05/24/a-new-camera-stack-for-octopi">new camera stack for OctoPi</a>. If you have not already got the new camera stack, you must flash your Pi and install the new OctoPi image.
 
@@ -163,7 +163,7 @@ In settings there are a few variables which need to be configured for use:
 
 This is the streaming URL of your nozzle-cam streamer. The plugin only supports WebRTC streams, which require OctoPrint 1.8.0 and above, with the new camera stack.
 
-This will be ```http://<the hostname (or IP) of your Raspberry Pi>/webcam/webrtc```. Replace localhost with the hostname (or IP).
+This will be ```http://localhost/webcam/webrtc```.
 
 <br/>
 
@@ -174,7 +174,7 @@ This will be ```http://<the hostname (or IP) of your Raspberry Pi>/webcam/webrtc
 
 This is the snapshot URL of your nozzle-cam streamer. The plugin only supports WebRTC streams, which require OctoPrint 1.8.0 and above, with the new camera stack.
 
-This will be ```http://<the hostname (or IP) of your Raspberry Pi>/webcam/?action=snapshot```
+This will be ```http://localhost/webcam/?action=snapshot```
 
 1. Paste in the streamer snapshot URL.
 2. Click snap to test the connection.

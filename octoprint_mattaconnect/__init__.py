@@ -2,6 +2,7 @@
 import flask
 import base64
 import octoprint.plugin
+import signal
 from .utils import init_sentry
 
 from .matta import MattaCore
@@ -35,9 +36,7 @@ class MattaconnectPlugin(
 
     def get_template_configs(self):
         """Returns the template configurations for the plugin"""
-        self._logger.debug(
-            "MattaConnect - is loading template configurations. Okay."
-        )
+        self._logger.debug("MattaConnect - is loading template configurations. Okay.")
         return [dict(type="settings", custom_bindings=True)]
 
     def get_assets(self):
@@ -54,17 +53,15 @@ class MattaconnectPlugin(
         # for details.
         return {
             "mattaconnect": {
-                "displayName": "Mattaconnect Plugin",
+                "displayName": "MattaOS Plugin",
                 "displayVersion": self._plugin_version,
-
                 # version check: github repository
                 "type": "github_release",
                 "user": "Matta-Labs",
-                "repo": "octoprint-mattaconnect",
+                "repo": "octoprint-mattaos",
                 "current": self._plugin_version,
-
                 # update method: pip
-                "pip": "https://github.com/Matta-Labs/octoprint-mattaconnect/archive/{target_version}.zip",
+                "pip": "https://github.com/Matta-Labs/octoprint-mattaos/archive/{target_version}.zip",
             }
         }
 
@@ -117,7 +114,7 @@ class MattaconnectPlugin(
             auth_token = data["auth_token"]
             success, status_text = self.matta_os.test_auth_token(token=auth_token)
             return flask.jsonify({"success": success, "text": status_text})
-        
+
         if command == "snapshot":
             success, status_text, image = self.matta_os.take_snapshot(url=data["url"])
             if image is not None:
@@ -125,7 +122,9 @@ class MattaconnectPlugin(
                 image_base64 = base64.b64encode(image).decode("utf-8")
             else:
                 image_base64 = None
-            return flask.jsonify({"success": success, "text": status_text, "image": image_base64})
+            return flask.jsonify(
+                {"success": success, "text": status_text, "image": image_base64}
+            )
 
     def parse_received_lines(self, comm_instance, line, *args, **kwargs):
         """
@@ -143,7 +142,9 @@ class MattaconnectPlugin(
         try:
             self.matta_os._printer.parse_line_for_updates(line)
         except AttributeError:
-            self.matta_os._printer = MattaPrinter(self._printer, self._logger, self._file_manager)
+            self.matta_os._printer = MattaPrinter(
+                self._printer, self._logger, self._file_manager
+            )
 
         if "UPDATED" in line:
             self.executed_update = True
@@ -200,7 +201,6 @@ class MattaconnectPlugin(
         except Exception as e:
             self._logger.error(e)
         return cmd
-
 
 
 __plugin_name__ = "MattaConnect"

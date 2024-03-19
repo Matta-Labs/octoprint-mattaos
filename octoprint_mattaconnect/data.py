@@ -55,7 +55,6 @@ class DataEngine:
         else:
             return None
 
-
     def create_job_dir(self):
         """
         Creates the directory for the current print job.
@@ -96,7 +95,7 @@ class DataEngine:
         temps = self._printer.get_data()["temperature_data"]
         metadata = {
             "count": self.image_count,
-            "timestamp": make_timestamp(),            
+            "timestamp": make_timestamp(),
             "flow_rate": self._printer.flow_rate,
             "feed_rate": self._printer.feed_rate,
             "z_offset": self._printer.z_offset,
@@ -142,7 +141,11 @@ class DataEngine:
             headers = generate_auth_headers(self._settings.get(["auth_token"]))
             try:
                 resp = requests.post(
-                    url=full_url, data=data, files=files, headers=headers, timeout=5,
+                    url=full_url,
+                    data=data,
+                    files=files,
+                    headers=headers,
+                    timeout=5,
                 )
                 resp.raise_for_status()
             except requests.exceptions.RequestException as e:
@@ -191,11 +194,15 @@ class DataEngine:
         headers = generate_auth_headers(self._settings.get(["auth_token"]))
         try:
             resp = requests.post(
-                url=full_url, data=data, files=files, headers=headers, timeout=5,
+                url=full_url,
+                data=data,
+                files=files,
+                headers=headers,
+                timeout=5,
             )
             resp.raise_for_status()
         except requests.exceptions.RequestException as e:
-            self._logger.error(e)
+            self._logger.info(e)
 
     def finished_upload(self, job_name, gcode_path, csv_path):
         """
@@ -225,7 +232,11 @@ class DataEngine:
             headers = generate_auth_headers(self._settings.get(["auth_token"]))
             try:
                 resp = requests.post(
-                    url=full_url, data=data, files=files, headers=headers, timeout=5,
+                    url=full_url,
+                    data=data,
+                    files=files,
+                    headers=headers,
+                    timeout=5,
                 )
                 resp.raise_for_status()
             except requests.exceptions.RequestException as e:
@@ -378,7 +389,7 @@ class DataEngine:
                 self.image_upload(resp.content)
                 self.image_count += 1
         except Exception as e:
-            self._logger.error(e)
+            self._logger.info(e)
 
     def data_thread_loop(self):
         """
