@@ -1,3 +1,4 @@
+import re
 import time
 import threading
 import requests
@@ -15,12 +16,12 @@ from .utils import (
 import os
 import shutil
 from PIL import Image
-
+from .printer import MattaPrinter
 
 class DataEngine:
     def __init__(
         self,
-        matta_printer,
+        matta_printer: MattaPrinter,
         settings,
         logger,
     ):
@@ -32,6 +33,8 @@ class DataEngine:
         self.csv_print_log = None
         self.csv_writer = None
         self.csv_path = None
+        self.first_layer_end_line = None
+        self.first_layer_csv_uploaded = False
         self.upload_attempts = 0
         self.start_data_thread()
 
@@ -77,6 +80,8 @@ class DataEngine:
         """
         self.csv_print_log = None
         self.csv_writer = None
+        self.first_layer_csv_uploaded = False
+        self.first_layer_end_line = None
         try:
             shutil.rmtree(self.get_job_dir())
         except OSError as e:
@@ -150,6 +155,8 @@ class DataEngine:
                 resp.raise_for_status()
             except requests.exceptions.RequestException as e:
                 self._logger.error(e)
+        # get first layer end line
+        self.find_first_layer_end_line(gcode_path)
 
     def image_upload(self, image):
         """
@@ -203,6 +210,46 @@ class DataEngine:
             resp.raise_for_status()
         except requests.exceptions.RequestException as e:
             self._logger.info(e)
+
+    def first_layer_upload(self, job_name, gcode_path, csv_path, first_layer_csv_path):
+        """
+        Sends the first layer csv to the server for analysis.
+
+        Args:
+            job_name (str): The name of the print job.
+            gcode_path (str): The path to the G-code file.
+            csv_path (str): The path to the CSV file.
+        
+        Raises:
+            requests.exceptions.RequestException: If an error occurs during the upload.
+
+        """
+        self._logger.debug(csv_path)
+        with open(csv_path, "rb") as csv:
+            gcode_name = os.path.basename(gcode_path)
+            csv_name = os.path.basename(first_layer_csv_path)
+            metadata = {
+                "name": os.path.splitext(gcode_name)[0],
+                "long_name": job_name,
+                "first_layer_csv_file": csv_name,
+            }
+            data = {"data": json.dumps(metadata)}
+            files = {
+                "csv_obj": (first_layer_csv_path, csv, "text/csv"),
+            }
+            full_url = get_api_url() + "print-jobs/remote/first-layer-upload"
+            headers = generate_auth_headers(self._settings.get(["auth_token"]))
+            try:
+                resp = requests.post(
+                    url=full_url,
+                    data=data,
+                    files=files,
+                    headers=headers,
+                    timeout=5,
+                )
+                resp.raise_for_status()
+            except requests.exceptions.RequestException as e:
+                self._logger.error(e)
 
     def finished_upload(self, job_name, gcode_path, csv_path):
         """
@@ -295,6 +342,7 @@ class DataEngine:
         """
         job_dir = self.create_job_dir()
         self.csv_path = os.path.join(job_dir, "print_log.csv")
+        self.first_layer_csv_path = os.path.join(job_dir, "first_layer.csv")
         self.gcode_path = os.path.join(
             get_gcode_upload_dir(),
             self._printer.get_current_job()["file"]["path"],
@@ -321,6 +369,64 @@ class DataEngine:
             self._logger.error("CSV print log was never made...")
         except Exception as e:
             self._logger.error(f"Failed to close print log file: {e}")
+
+    def find_first_layer_end_line(self, gcode_path):
+        """
+        Find the line number of the first layer end in the G-code file.
+
+        Args:
+            gcode_path (str): The path to the G-code file.
+
+        Returns:
+            int: The line number of the first layer end.
+        """
+        with open(gcode_path, "r") as gcode:
+            gcode_lines = gcode.readlines()
+            # find lines that are not comments and have E in them
+            e_lines = []
+            z_change_lines = []
+            for i, line in enumerate(gcode_lines):
+                if line.startswith(";"):
+                    continue
+                if "E" in line:
+                    e_lines.append(i)
+                if "Z" in line:
+                    # regex string after Z and before space or the end of the line
+                    regex = r"Z(-?\d*\.?\d+)"
+                    z_change = re.search(regex, line)
+                    if z_change:
+                        z_change_lines.append((i, float(z_change.group(1))))
+            
+            # find the first layer start extrusion line if Es are in 8 out of 10 consecutive lines
+            consecutive_e_lines = 0
+            first_layer_start_line = None
+            threshold = 10
+            for threshold in range(10, 0, -1):
+                for i, line in enumerate(e_lines):
+                    if i + threshold > len(e_lines):
+                        break
+                    if e_lines[i + threshold] - e_lines[i] < threshold:
+                        first_layer_start_line = e_lines[i]
+                        break
+                if first_layer_start_line:
+                    break
+            
+            # find what Z value is at the first layer start line
+            first_layer_start_z = None
+            for line in z_change_lines:
+                first_layer_start_line = line[0]
+                first_layer_start_z = line[1]
+                if line[0] > first_layer_start_line:
+                    first_layer_end_line = line[0]
+                    break
+            
+            self.first_layer_end_line = first_layer_end_line
+            self._logger.debug(f"First layer end line: {first_layer_end_line}")
+            self._logger.debug(f"First layer start line: {first_layer_start_line}")
+            self._logger.debug(f"First layer start Z: {first_layer_start_z}")
+            return
+                    
+            
 
     def csv_headers(self):
         """Returns a list of CSV headers used for data collection."""
@@ -381,6 +487,12 @@ class DataEngine:
             self.csv_print_log.flush()
         except Exception as e:
             self._logger.error(e)
+        
+        # check if first layer is done
+        buffer_length = 8
+        if self.first_layer_csv_uploaded == False and self._printer.gcode_line_num_no_comments > self.first_layer_end_line + buffer_length:
+            self.first_layer_csv_uploaded = True
+            self.first_layer_upload(self._printer.current_job, self.gcode_path, self.csv_path, self.first_layer_csv_path)
 
     def update_image(self):
         try:
