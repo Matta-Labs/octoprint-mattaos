@@ -251,7 +251,6 @@ class DataEngine:
             except requests.exceptions.RequestException as e:
                 self._logger.error(e)
 
-
     def finished_upload(self, job_name, gcode_path, csv_path):
         """
         Notifies the server that the print job has finished.
