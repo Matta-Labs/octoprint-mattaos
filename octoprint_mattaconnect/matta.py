@@ -214,6 +214,13 @@ class MattaCore:
                 else:
                     self._printer.handle_cmds(json_msg)
                     msg = self.ws_data()
+            if json_msg.get("heartbeat", None) == "ping":
+                # check if printer is printing
+                extra_data = {
+                    "heartbeat": "ping",
+                }
+                self._logger.info(f"Sending heartbeat with message: {extra_data['heartbeat']}")
+                msg = self.ws_data(extra_data=extra_data)
             self.ws_send(msg)
             self.update_ws_send_interval()
         except Exception as e:

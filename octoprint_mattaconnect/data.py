@@ -385,9 +385,12 @@ class DataEngine:
             # find lines that are not comments and have E in them
             e_lines = []
             z_change_lines = []
-            for i, line in enumerate(gcode_lines):
-                if line.startswith(";"):
+
+            i=0
+            for line in gcode_lines:
+                if line.startswith(";") or line == "\n":
                     continue
+                i+=1
                 if "E" in line:
                     e_lines.append(i)
                 if "Z" in line:
@@ -396,34 +399,39 @@ class DataEngine:
                     z_change = re.search(regex, line)
                     if z_change:
                         z_change_lines.append((i, float(z_change.group(1))))
-            
+                      
+            self._logger.info(f"Z change lines length: {len(z_change_lines)}")
+            self._logger.info(f"E lines length: {len(e_lines)}")
+            self._logger.info(f"Z change lines: {z_change_lines[:20]}")
+
             # find the first layer start extrusion line if Es are in 8 out of 10 consecutive lines
             consecutive_e_lines = 0
             first_layer_start_line = None
             threshold = 10
-            for threshold in range(10, 0, -1):
+            for threshold in range(10, 20, 1):
                 for i, line in enumerate(e_lines):
-                    if i + threshold > len(e_lines):
+                    if i + 8 >= len(e_lines):
                         break
-                    if e_lines[i + threshold] - e_lines[i] < threshold:
+                    if e_lines[i + 8] - e_lines[i] < threshold:
                         first_layer_start_line = e_lines[i]
                         break
-                if first_layer_start_line:
+                if first_layer_start_line is not None:
+
                     break
             
             # find what Z value is at the first layer start line
             first_layer_start_z = None
             for line in z_change_lines:
-                first_layer_start_line = line[0]
-                first_layer_start_z = line[1]
                 if line[0] > first_layer_start_line:
                     first_layer_end_line = line[0]
                     break
-            
+                first_layer_start_z = line[1]
+                
+            self._logger.info(f"First layer start line: {first_layer_start_line}")
+            self._logger.info(f"First layer start Z: {first_layer_start_z}")
+            self._logger.info(f"First layer end line: {first_layer_end_line}")
+
             self.first_layer_end_line = first_layer_end_line
-            self._logger.debug(f"First layer end line: {first_layer_end_line}")
-            self._logger.debug(f"First layer start line: {first_layer_start_line}")
-            self._logger.debug(f"First layer start Z: {first_layer_start_z}")
             return
                     
             
@@ -490,7 +498,8 @@ class DataEngine:
         
         # check if first layer is done
         buffer_length = 8
-        if self.first_layer_csv_uploaded == False and self._printer.gcode_line_num_no_comments > self.first_layer_end_line + buffer_length:
+        
+        if self.first_layer_csv_uploaded == False and int(self._printer.gcode_line_num_no_comments) > self.first_layer_end_line + buffer_length:
             self.first_layer_csv_uploaded = True
             self.first_layer_upload(self._printer.current_job, self.gcode_path, self.csv_path, self.first_layer_csv_path)
 
