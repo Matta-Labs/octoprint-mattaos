@@ -385,6 +385,7 @@ class DataEngine:
             # find lines that are not comments and have E in them
             e_lines = []
             z_change_lines = []
+
             i=0
             for line in gcode_lines:
                 if line.startswith(";") or line == "\n":
@@ -398,7 +399,7 @@ class DataEngine:
                     z_change = re.search(regex, line)
                     if z_change:
                         z_change_lines.append((i, float(z_change.group(1))))
-            
+                      
             self._logger.info(f"Z change lines length: {len(z_change_lines)}")
             self._logger.info(f"E lines length: {len(e_lines)}")
             self._logger.info(f"Z change lines: {z_change_lines[:20]}")
@@ -415,6 +416,7 @@ class DataEngine:
                         first_layer_start_line = e_lines[i]
                         break
                 if first_layer_start_line is not None:
+
                     break
             
             # find what Z value is at the first layer start line
@@ -496,6 +498,7 @@ class DataEngine:
         
         # check if first layer is done
         buffer_length = 8
+        
         if self.first_layer_csv_uploaded == False and int(self._printer.gcode_line_num_no_comments) > self.first_layer_end_line + buffer_length:
             self.first_layer_csv_uploaded = True
             self.first_layer_upload(self._printer.current_job, self.gcode_path, self.csv_path, self.first_layer_csv_path)
