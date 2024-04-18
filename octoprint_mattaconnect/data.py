@@ -115,6 +115,7 @@ class DataEngine:
             "flip_h": self._settings.get(["flip_h"]),
             "flip_v": self._settings.get(["flip_v"]),
             "rotate": self._settings.get(["rotate"]),
+            "printer_state": self._printer.get_data()["state"],
         }
         return metadata
 
