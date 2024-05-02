@@ -1,6 +1,6 @@
 import re
 import os
-from .utils import get_file_from_url, make_timestamp, post_file_to_backend_for_download
+from .utils import get_file_from_url, make_timestamp, post_file_to_backend_for_download, download_file_from_url
 from octoprint.filemanager import FileDestinations
 
 
@@ -217,7 +217,11 @@ class MattaPrinter:
                 )
                 file_url = json_msg["files"]["url"]
 
-                response = get_file_from_url(file_url)
+                # response = get_file_from_url(file_url)
+                response = download_file_from_url(file_url)
+
+                if response is None:
+                    return
 
                 class FileObjectWithSaveMethod:
                     def save(self, destination_path):

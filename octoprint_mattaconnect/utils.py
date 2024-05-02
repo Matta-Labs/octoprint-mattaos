@@ -1,9 +1,11 @@
 import psutil
-from datetime import datetime
 import requests
 import sentry_sdk
+import time
 import os
+from datetime import datetime
 from sys import platform
+
 
 MATTA_OS_ENDPOINT = "https://os.matta.ai/"
 # MATTA_OS_ENDPOINT = "http://localhost"
@@ -196,14 +198,44 @@ def get_file_from_url(file_url):
     Args:
         file_url (str): The URL to download the file from.
     """
-    try:
-        resp = requests.get(file_url, timeout=5)
-        resp.raise_for_status()
-        return resp.text
-    except Exception as e:
-        raise e
+    retries = 3
+    decay = 2  # decay factor for wait time between retries
 
+    for i in range(retries):
+        try:
+            resp = requests.get(file_url)
+            resp.raise_for_status()
+            return resp.text
+        except Exception as e:
+            if i < retries - 1:  # no need to wait after the last try
+                time.sleep(decay ** i)  # wait time increases with each retry
+            else:
+                raise e
 
+def download_file_from_url(file_url):
+    """
+    Stream large file download to a string.
+
+    Args:
+        file_url (str): The URL to download the file from.
+    """
+    retries = 3
+    decay = 2  # decay factor for wait time between retries
+
+    for i in range(retries):
+        try:
+            with requests.get(file_url, stream=True) as r:
+                r.raise_for_status()
+                file_content = ''
+                for chunk in r.iter_content(chunk_size=8192, decode_unicode=True): 
+                    file_content += chunk.decode('utf-8')
+            return file_content
+        except Exception as e:
+            if i < retries - 1:  # no need to wait after the last try
+                time.sleep(decay ** i)  # wait time increases with each retry
+            else:
+                raise e
+            
 def post_file_to_backend_for_download(file_name, file_content, auth_token):
     """Posts a file to the backend"""
     full_url = get_api_url() + "printers/upload-from-edge/download-request"
