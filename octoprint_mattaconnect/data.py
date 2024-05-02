@@ -240,17 +240,25 @@ class DataEngine:
             }
             full_url = get_api_url() + "print-jobs/remote/first-layer-upload"
             headers = generate_auth_headers(self._settings.get(["auth_token"]))
-            try:
-                resp = requests.post(
-                    url=full_url,
-                    data=data,
-                    files=files,
-                    headers=headers,
-                    timeout=5,
-                )
-                resp.raise_for_status()
-            except requests.exceptions.RequestException as e:
-                self._logger.error(e)
+            retries = 3
+            decay = 2  # decay factor for wait time between retries
+
+            for i in range(retries):
+                try:
+                    resp = requests.post(
+                        url=full_url,
+                        data=data,
+                        files=files,
+                        headers=headers,
+                    )
+                    resp.raise_for_status()
+                    break  # if the request is successful, we break the loop
+                except requests.exceptions.RequestException as e:
+                    if i < retries - 1:  # no need to wait after the last try
+                        time.sleep(decay ** i)  # wait time increases with each retry
+                    else:
+                        self._logger.error(e)
+                        raise e
 
     def finished_upload(self, job_name, gcode_path, csv_path):
         """
@@ -278,17 +286,27 @@ class DataEngine:
             }
             full_url = get_api_url() + "print-jobs/remote/end-job"
             headers = generate_auth_headers(self._settings.get(["auth_token"]))
-            try:
-                resp = requests.post(
-                    url=full_url,
-                    data=data,
-                    files=files,
-                    headers=headers,
-                    timeout=5,
-                )
-                resp.raise_for_status()
-            except requests.exceptions.RequestException as e:
-                self._logger.error(e)
+            import time
+
+            retries = 3
+            decay = 2  # decay factor for wait time between retries
+
+            for i in range(retries):
+                try:
+                    resp = requests.post(
+                        url=full_url,
+                        data=data,
+                        files=files,
+                        headers=headers,
+                    )
+                    resp.raise_for_status()
+                    break  # if the request is successful, we break the loop
+                except requests.exceptions.RequestException as e:
+                    if i < retries - 1:  # no need to wait after the last try
+                        time.sleep(decay ** i)  # wait time increases with each retry
+                    else:
+                        self._logger.error(e)
+                        raise e
 
     def is_new_job(self):
         """
