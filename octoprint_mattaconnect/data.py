@@ -5,6 +5,7 @@ import requests
 import csv
 import json
 import io
+from cachetools import TTLCache
 from .utils import (
     get_api_url,
     get_gcode_upload_dir,
@@ -36,6 +37,10 @@ class DataEngine:
         self.first_layer_end_line = None
         self.first_layer_csv_uploaded = False
         self.upload_attempts = 0
+
+        # bad url cache for the snapshot
+        self.bad_url_cache = TTLCache(maxsize=100, ttl=60)
+        self.unsuccessful_image_count = 0
         self.start_data_thread()
 
     def start_data_thread(self):
@@ -151,7 +156,6 @@ class DataEngine:
                     data=data,
                     files=files,
                     headers=headers,
-                    timeout=5,
                 )
                 resp.raise_for_status()
             except requests.exceptions.RequestException as e:
@@ -524,12 +528,21 @@ class DataEngine:
 
     def update_image(self):
         try:
-            resp = requests.get(self._settings.get(["snapshot_url"]), stream=True)
+            if self._settings.get(["snapshot_url"]) not in self.bad_url_cache:
+                resp = requests.get(self._settings.get(["snapshot_url"]), stream=True)
+            else:
+                raise Exception("Bad URL")
             if resp.status_code == 200:
+                self.unsuccessful_image_count = 0
                 self.image_upload(resp.content)
                 self.image_count += 1
         except Exception as e:
-            self._logger.info(e)
+            if "httpconnectionpool" in str(e).lower():
+                self.unsuccessful_image_count += 1
+                if self.unsuccessful_image_count > 3:
+                    self.bad_url_cache[self._settings.get(["snapshot_url"])] = True
+                # print the type of exception
+                self._logger.error("Type of exception: " + str(type(e)))
 
     def data_thread_loop(self):
         """

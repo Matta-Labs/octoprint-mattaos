@@ -35,6 +35,7 @@ plugin_license = "AGPLv3"
 # Any additional requirements besides OctoPrint should be listed here
 plugin_requires = [
     "sentry-sdk",
+    "cachetools",
     "pillow==9.5.0",
 ]
 

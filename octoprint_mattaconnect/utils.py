@@ -182,7 +182,6 @@ def get_file_from_backend(bucket_file, auth_token):
             url=full_url,
             data=data,
             headers=headers,
-            timeout=5,
         )
         # print data from resp
         resp.raise_for_status()
@@ -228,7 +227,10 @@ def download_file_from_url(file_url):
                 r.raise_for_status()
                 file_content = ''
                 for chunk in r.iter_content(chunk_size=8192, decode_unicode=True): 
-                    file_content += chunk.decode('utf-8')
+                    # if chuck is bytes, decode it to utf-8
+                    if not isinstance(chunk, str):
+                        chunk = chunk.decode('utf-8')
+                    file_content += chunk
             return file_content
         except Exception as e:
             if i < retries - 1:  # no need to wait after the last try
@@ -256,7 +258,6 @@ def post_file_to_backend_for_download(file_name, file_content, auth_token):
             url=full_url,
             files=files,
             headers=headers,
-            timeout=5,
         )
         # print data from resp
         resp.raise_for_status()
