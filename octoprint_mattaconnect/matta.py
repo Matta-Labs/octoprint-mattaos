@@ -121,6 +121,7 @@ class MattaCore:
                             self.updated_plugin_version = release_tag + "-r"
                         elif "Installation failed!" in line.decode("utf-8"):
                             self._logger.info("Installation failed!")
+                            self.updated_plugin_version = release_tag + "-f"
 
                 process = subprocess.Popen(["bash", "./update.sh"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
