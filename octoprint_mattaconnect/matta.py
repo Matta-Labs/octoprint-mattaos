@@ -83,13 +83,8 @@ class MattaCore:
         exit(0)
 
         # Example usage to get the version of a package
-    def check_package_version(self):
+    def check_package_version(self, release_tag):
         self._logger.info("Checking for new version")
-        package_name = "octoprint-mattaos"
-        response = requests.get(f'https://api.github.com/repos/Matta-Labs/{package_name}/releases/latest')
-        data = response.json()
-        self._logger.info(data)
-        release_tag =  data.get("tag_name", None)
         if release_tag is not None:
             release_tag = release_tag.replace("v", "")
         current_package_version = self._plugin._plugin_version
@@ -100,14 +95,14 @@ class MattaCore:
             new_version_available = True
         self._logger.info(f"Current version: {current_package_version}")
         self._logger.info(f"Latest version: {release_tag}")
-        return new_version_available, release_tag
+        return new_version_available
 
-    def over_the_air_update(self):
+    def over_the_air_update(self, update_url, release_tag):
         # /home/pi/oprint/lib/python3.7/site-packages/moonraker_mattaos
         # get the pip install location
         # find lib in the path and remove everything after it
         # check if there is a new version available
-        new_version_available, release_tag = self.check_package_version()
+        new_version_available = self.check_package_version(release_tag)
         
         if new_version_available:
             # run subprocess to update the plugin
@@ -123,7 +118,7 @@ class MattaCore:
                             self._logger.info("Installation failed!")
                             self.updated_plugin_version = release_tag + "-f"
 
-                process = subprocess.Popen(["bash", "./update.sh"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                process = subprocess.Popen(["bash", "./update.sh", release_tag, update_url], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
                 with process.stdout:
                     log_subprocess_output(process.stdout)
@@ -268,7 +263,10 @@ class MattaCore:
                     else:
                         msg = self.ws_data()
                 elif json_msg.get("update", None) == True:
-                    updated_status = self.over_the_air_update()
+                    # get update_url
+                    update_url = json_msg.get("update_url", None)
+                    release_tag = json_msg.get("release_tag", None)
+                    updated_status = self.over_the_air_update(update_url, release_tag)
                     msg = self.ws_data(extra_data=updated_status)
                 else:
                     self._printer.handle_cmds(json_msg)
