@@ -3,6 +3,7 @@ import json
 import threading
 import signal
 import subprocess
+import getpass
 from octoprint.util.platform import get_os
 from octoprint.util.version import get_octoprint_version_string
 
@@ -117,9 +118,20 @@ class MattaCore:
                         elif "Installation failed!" in line.decode("utf-8"):
                             self._logger.info("Installation failed!")
                             self.updated_plugin_version = release_tag + "-f"
-
-                process = subprocess.Popen(["bash", "./update.sh", release_tag, update_url], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-
+                # before running the subprocess get the path to the plugin PYTHON_DIR=$(find /home/${USER}/${ENV_NAME}/lib/ -type d -name "python*" -print -quit)
+                # run a command
+                try:
+                    user_path = getpass.getuser()
+                    command = f"find /home/{user_path}/oprint/lib/ -type d -name 'python*' -print -quit"
+                    plugin_path = subprocess.check_output(command, shell=True).decode("utf-8").strip()
+                    self._logger.info(f"Plugin path: {plugin_path}")
+                    if plugin_path == "" or plugin_path is None:
+                        raise Exception("Plugin path not found")
+                    process = subprocess.Popen(["bash", f"{plugin_path}/site-packages/octoprint_mattaconnect/update/update.sh", release_tag, update_url], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                except Exception as e:
+                    self._logger.error("Error running subprocess: %s", e)
+                    self.updated_plugin_version = release_tag + "-f"
+                    return {"update_status": "failed"}
                 with process.stdout:
                     log_subprocess_output(process.stdout)
                 exitcode = process.wait() # 0 means success

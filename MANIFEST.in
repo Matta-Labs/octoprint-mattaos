@@ -2,3 +2,4 @@ include README.md
 recursive-include octoprint_mattaconnect/templates *
 recursive-include octoprint_mattaconnect/translations *
 recursive-include octoprint_mattaconnect/static *
+recursive-include octoprint_mattaconnect/update *
