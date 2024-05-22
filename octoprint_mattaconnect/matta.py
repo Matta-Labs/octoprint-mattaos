@@ -2,6 +2,8 @@ import time
 import json
 import threading
 import signal
+import subprocess
+import getpass
 from octoprint.util.platform import get_os
 from octoprint.util.version import get_octoprint_version_string
 
@@ -22,6 +24,8 @@ import requests
 class MattaCore:
     def __init__(self, plugin, csv_capture=True, image_capture=True):
         self._settings = plugin._settings
+        self._plugin = plugin
+        self.updated_plugin_version = None
         self._printer = MattaPrinter(
             plugin._printer,
             plugin._logger,
@@ -78,6 +82,65 @@ class MattaCore:
             self.ws = None
         self._logger.info("MattaConnect Plugin shutting down...")
         exit(0)
+
+        # Example usage to get the version of a package
+    def check_package_version(self, release_tag):
+        self._logger.info("Checking for new version")
+        if release_tag is not None:
+            release_tag = release_tag.replace("v", "")
+        current_package_version = self._plugin._plugin_version
+        if current_package_version is not None:
+            current_package_version = current_package_version.replace("v", "")
+        new_version_available = False
+        if release_tag != current_package_version:
+            new_version_available = True
+        self._logger.info(f"Current version: {current_package_version}")
+        self._logger.info(f"Latest version: {release_tag}")
+        return new_version_available
+
+    def over_the_air_update(self, update_url, release_tag):
+        # /home/pi/oprint/lib/python3.7/site-packages/moonraker_mattaos
+        # get the pip install location
+        # find lib in the path and remove everything after it
+        # check if there is a new version available
+        new_version_available = self.check_package_version(release_tag)
+        
+        if new_version_available:
+            # run subprocess to update the plugin
+            try:
+                def log_subprocess_output(pipe):
+                    for line in iter(pipe.readline, b''): # b'\n'-separated lines
+                        self._logger.info('got line from subprocess: %r', line)
+                        # check if the line contains installation status
+                        if "Installation completed!" in line.decode("utf-8"):
+                            self._logger.info("Installation completed!")
+                            self.updated_plugin_version = release_tag + "-r"
+                        elif "Installation failed!" in line.decode("utf-8"):
+                            self._logger.info("Installation failed!")
+                            self.updated_plugin_version = release_tag + "-f"
+                # before running the subprocess get the path to the plugin PYTHON_DIR=$(find /home/${USER}/${ENV_NAME}/lib/ -type d -name "python*" -print -quit)
+                # run a command
+                try:
+                    user_path = getpass.getuser()
+                    command = f"find /home/{user_path}/oprint/lib/ -type d -name 'python*' -print -quit"
+                    plugin_path = subprocess.check_output(command, shell=True).decode("utf-8").strip()
+                    self._logger.info(f"Plugin path: {plugin_path}")
+                    if plugin_path == "" or plugin_path is None:
+                        raise Exception("Plugin path not found")
+                    process = subprocess.Popen(["bash", f"{plugin_path}/site-packages/octoprint_mattaconnect/update/update.sh", release_tag, update_url], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                except Exception as e:
+                    self._logger.error("Error running subprocess: %s", e)
+                    self.updated_plugin_version = release_tag + "-f"
+                    return {"update_status": "failed"}
+                with process.stdout:
+                    log_subprocess_output(process.stdout)
+                exitcode = process.wait() # 0 means success
+                self._logger.info(f"Plugin updated successfully {exitcode}") 
+            except subprocess.CalledProcessError as e:
+                self._logger.error("Error updating plugin: %s", e)
+                self._logger.info("Error:", e)
+                self._logger.info("Output:", e.stdout)
+                self._logger.info("Errors:", e.stderr)
 
     def ws_connected(self):
         """
@@ -211,6 +274,12 @@ class MattaCore:
                         msg = self.ws_data(extra_data=webrtc_data)
                     else:
                         msg = self.ws_data()
+                elif json_msg.get("update", None) == True:
+                    # get update_url
+                    update_url = json_msg.get("update_url", None)
+                    release_tag = json_msg.get("release_tag", None)
+                    updated_status = self.over_the_air_update(update_url, release_tag)
+                    msg = self.ws_data(extra_data=updated_status)
                 else:
                     self._printer.handle_cmds(json_msg)
                     msg = self.ws_data()
@@ -263,6 +332,7 @@ class MattaCore:
                     "version": self.octoprint_version,
                     "os": self.os,
                     "memory": get_current_memory_usage(self.os),
+                    "plugin_version": self._plugin._plugin_version if self.updated_plugin_version is None else self.updated_plugin_version,
                 },
                 "nozzle_tip_coords": {
                     "nozzle_tip_coords_x": int(

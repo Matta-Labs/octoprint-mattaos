@@ -1,4 +1,5 @@
 import re
+import inspect
 import os
 from .utils import get_file_from_url, make_timestamp, post_file_to_backend_for_download, download_file_from_url
 from octoprint.filemanager import FileDestinations
@@ -228,12 +229,34 @@ class MattaPrinter:
                         with open(destination_path, "w") as file:
                             file.write(response)
 
-                self._file_manager.add_file(
-                    path=json_msg["files"]["file"],
-                    file_object=FileObjectWithSaveMethod(),
-                    destination=destination,
-                    allow_overwrite=True,
-                )
+                # Get the signature of the add_file method
+                sig = inspect.signature(self._file_manager.add_file)
+
+                # Check if 'destination' or 'location' are in the parameters
+                has_destination = 'destination' in sig.parameters
+                has_location = 'location' in sig.parameters
+
+                if has_destination:
+                    self._file_manager.add_file(
+                        path=json_msg["files"]["file"],
+                        file_object=FileObjectWithSaveMethod(),
+                        destination=destination,
+                        allow_overwrite=True,
+                    )
+                elif has_location:
+                    self._file_manager.add_file(
+                        path=json_msg["files"]["file"],
+                        file_object=FileObjectWithSaveMethod(),
+                        location=destination,
+                        allow_overwrite=True,
+                    )
+                else:
+                    self._file_manager.add_file(
+                        path=json_msg["files"]["file"],
+                        file_object=FileObjectWithSaveMethod(),
+                        allow_overwrite=True,
+                    )
+
                 if json_msg["files"]["print"]:
                     on_sd = True if json_msg["files"]["loc"] == "sd" else False
                     self._printer.select_file(
