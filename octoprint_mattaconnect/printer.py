@@ -270,11 +270,11 @@ class MattaPrinter:
                 )
                 if json_msg["files"]["type"] == "folder":
                     self._file_manager.remove_folder(
-                        path=json_msg["files"]["file"], destination=destination
+                        path=json_msg["files"]["file"], location=destination
                     )
                 else:
                     self._file_manager.remove_file(
-                        path=json_msg["files"]["file"], destination=destination
+                        path=json_msg["files"]["file"], location=destination
                     )
             elif json_msg["files"]["cmd"] == "new_folder":
                 destination = (
