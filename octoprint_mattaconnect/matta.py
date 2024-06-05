@@ -278,8 +278,8 @@ class MattaCore:
                     # get update_url
                     update_url = json_msg.get("update_url", None)
                     release_tag = json_msg.get("release_tag", None)
-                    updated_status = self.over_the_air_update(update_url, release_tag)
-                    msg = self.ws_data(extra_data=updated_status)
+                    update_status = self.over_the_air_update(update_url, release_tag)
+                    msg = self.ws_data(extra_data=update_status)
                 else:
                     self._printer.handle_cmds(json_msg)
                     msg = self.ws_data()
