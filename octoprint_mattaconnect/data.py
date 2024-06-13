@@ -37,9 +37,7 @@ class DataEngine:
         self.first_layer_end_line = None
         self.first_layer_csv_uploaded = False
         self.upload_attempts = 0
-
-        # bad url cache for the snapshot
-        self.bad_url_cache = TTLCache(maxsize=100, ttl=60)
+        self.bad_url_cache = TTLCache(maxsize=100, ttl=120)
         self.unsuccessful_image_count = 0
         self.start_data_thread()
 
@@ -530,19 +528,19 @@ class DataEngine:
         try:
             if self._settings.get(["snapshot_url"]) not in self.bad_url_cache:
                 resp = requests.get(self._settings.get(["snapshot_url"]), stream=True)
+                if resp.status_code != 200:
+                    raise Exception("Unsuccessful request, status code: " + str(resp.status_code))
             else:
                 raise Exception("Bad URL")
-            if resp.status_code == 200:
-                self.unsuccessful_image_count = 0
-                self.image_upload(resp.content)
-                self.image_count += 1
+            self.unsuccessful_image_count = 0
+            self.image_upload(resp.content)
+            self.image_count += 1
         except Exception as e:
-            if "httpconnectionpool" in str(e).lower():
+            self._logger.error("Exception: " + str(e))
+            if "unsuccessful request" in str(e).lower():
                 self.unsuccessful_image_count += 1
                 if self.unsuccessful_image_count > 3:
                     self.bad_url_cache[self._settings.get(["snapshot_url"])] = True
-                # print the type of exception
-                self._logger.error("Type of exception: " + str(type(e)))
 
     def data_thread_loop(self):
         """
