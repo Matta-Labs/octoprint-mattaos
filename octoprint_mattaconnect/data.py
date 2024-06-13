@@ -536,10 +536,11 @@ class DataEngine:
             self.image_upload(resp.content)
             self.image_count += 1
         except Exception as e:
-            self._logger.error("Exception: " + str(e))
             if "unsuccessful request" in str(e).lower():
+                self._logger.info("Unsuccessful request image request.")
                 self.unsuccessful_image_count += 1
                 if self.unsuccessful_image_count > 3:
+                    self._logger.info("Maximum failed image requests reached, blacklisting snapshot URL for 2 minutes.")
                     self.bad_url_cache[self._settings.get(["snapshot_url"])] = True
 
     def data_thread_loop(self):
