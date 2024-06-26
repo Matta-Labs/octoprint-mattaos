@@ -7,8 +7,8 @@ from datetime import datetime
 from sys import platform
 
 
-MATTA_OS_ENDPOINT = "https://os.matta.ai/"
-# MATTA_OS_ENDPOINT = "http://localhost"
+# MATTA_OS_ENDPOINT = "https://os.matta.ai/"
+MATTA_OS_ENDPOINT = "http://192.168.0.51/"
 
 MATTA_TMP_DATA_DIR = os.path.join(os.path.expanduser("~"), ".matta")
 

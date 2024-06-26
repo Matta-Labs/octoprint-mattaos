@@ -1,6 +1,9 @@
 import re
 import inspect
 import os
+from concurrent.futures import ThreadPoolExecutor
+
+from .worker import download_file_and_print, upload_file_to_backend
 from .utils import get_file_from_url, make_timestamp, post_file_to_backend_for_download, download_file_from_url
 from octoprint.filemanager import FileDestinations
 
@@ -27,6 +30,9 @@ class MattaPrinter:
 
         self.new_print_job = False
         self.current_job = None
+
+        # Initialize the ThreadPoolExecutor
+        self.executor = ThreadPoolExecutor()
 
     def reset(self):
         """Resets all parameters to default values"""
@@ -211,23 +217,13 @@ class MattaPrinter:
                     json_msg["files"]["file"], sd=on_sd, printAfterSelect=False
                 )
             elif json_msg["files"]["cmd"] == "upload":
+                # Download the file from the URL and save it to the local file system
                 destination = (
                     FileDestinations.SDCARD
                     if json_msg["files"]["loc"] == "sd"
                     else FileDestinations.LOCAL
                 )
                 file_url = json_msg["files"]["url"]
-
-                # response = get_file_from_url(file_url)
-                response = download_file_from_url(file_url)
-
-                if response is None:
-                    return
-
-                class FileObjectWithSaveMethod:
-                    def save(self, destination_path):
-                        with open(destination_path, "w") as file:
-                            file.write(response)
 
                 # Get the signature of the add_file method
                 sig = inspect.signature(self._file_manager.add_file)
@@ -236,32 +232,21 @@ class MattaPrinter:
                 has_destination = 'destination' in sig.parameters
                 has_location = 'location' in sig.parameters
 
-                if has_destination:
-                    self._file_manager.add_file(
-                        path=json_msg["files"]["file"],
-                        file_object=FileObjectWithSaveMethod(),
-                        destination=destination,
-                        allow_overwrite=True,
-                    )
-                elif has_location:
-                    self._file_manager.add_file(
-                        path=json_msg["files"]["file"],
-                        file_object=FileObjectWithSaveMethod(),
-                        location=destination,
-                        allow_overwrite=True,
-                    )
-                else:
-                    self._file_manager.add_file(
-                        path=json_msg["files"]["file"],
-                        file_object=FileObjectWithSaveMethod(),
-                        allow_overwrite=True,
-                    )
+                json_file = json_msg["files"]
+                
+                # call the download_file_and_print function
+                # in new thread and do not block the main thread
+                
+                self.executor.submit(
+                    download_file_and_print,
+                    file_url,
+                    destination,
+                    sig,
+                    json_file,
+                    self._file_manager,
+                    self._printer,
+                )
 
-                if json_msg["files"]["print"]:
-                    on_sd = True if json_msg["files"]["loc"] == "sd" else False
-                    self._printer.select_file(
-                        json_msg["files"]["file"], sd=on_sd, printAfterSelect=True
-                    )
             elif json_msg["files"]["cmd"] == "delete":
                 destination = (
                     FileDestinations.SDCARD
@@ -269,12 +254,16 @@ class MattaPrinter:
                     else FileDestinations.LOCAL
                 )
                 if json_msg["files"]["type"] == "folder":
-                    self._file_manager.remove_folder(
-                        path=json_msg["files"]["file"], location=destination
+                    self.executor.submit(
+                        self._file_manager.remove_folder,
+                        path=json_msg["files"]["folder"],
+                        location=destination,
                     )
                 else:
-                    self._file_manager.remove_file(
-                        path=json_msg["files"]["file"], location=destination
+                    self.executor.submit(
+                        self._file_manager.remove_file,
+                        path=json_msg["files"]["file"],
+                        location=destination,
                     )
             elif json_msg["files"]["cmd"] == "new_folder":
                 destination = (
@@ -297,13 +286,11 @@ class MattaPrinter:
                 full_path = self._file_manager.path_on_disk(
                     destination, json_msg["files"]["file"]
                 )
-                with open(full_path, "r") as file:
-                    file_content = file.read()
-                    response = post_file_to_backend_for_download(
-                        os.path.basename(full_path),
-                        file_content,
-                        self._settings.get(["auth_token"]),
-                    )
+                self.executor.submit(
+                    upload_file_to_backend,
+                    full_path,
+                    self._settings.get(["auth_token"]),
+                )
         elif "gcode" in json_msg:
             if json_msg["gcode"]["cmd"] == "send":
                 self._printer.commands(commands=json_msg["gcode"]["lines"])
